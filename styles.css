@@ -191,14 +191,39 @@ section { padding: 72px 0; }
 .band { background: var(--ink); color: #efeaf4; text-align: center; }
 .band h2 { color: #fff; font-size: 2.2rem; font-style: italic; margin-bottom: 12px; }
 .band p { color: #c9c2d6; max-width: 560px; margin: 0 auto 28px; }
-.signup { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.signup input {
-  font-family: 'Lora', Georgia, serif; font-size: 1rem; padding: 13px 16px;
-  border: 1px solid #4a4458; background: #2a2833; color: #fff; border-radius: 2px; min-width: 280px;
+.signup { max-width: 520px; margin: 0 auto; text-align: left; }
+.signup .field-row { display: flex; gap: 10px; }
+.signup input[type="text"], .signup input[type="email"] {
+  font-family: 'Lora', Georgia, serif; font-size: 1rem; padding: 13px 16px; width: 100%;
+  border: 1px solid #4a4458; background: #2a2833; color: #fff; border-radius: 2px; margin-bottom: 12px;
 }
 .signup input::placeholder { color: #8d8799; }
+.signup input:focus { outline: none; border-color: var(--lav); }
+
+.timing { border: 0; padding: 0; margin: 2px 0 16px; }
+.timing legend { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.14em; color: #c9c2d6; margin-bottom: 10px; padding: 0; }
+.timing { display: flex; flex-wrap: wrap; gap: 10px; }
+.timing legend { flex-basis: 100%; }
+.timing label { position: relative; cursor: pointer; }
+.timing input { position: absolute; opacity: 0; }
+.timing span {
+  display: inline-block; padding: 9px 16px; border: 1px solid #4a4458; border-radius: 999px;
+  font-size: 0.86rem; color: #d7d1e0; transition: all 130ms ease;
+}
+.timing label:hover span { border-color: var(--lav); color: #fff; }
+.timing input:checked + span { background: var(--lav); border-color: var(--lav); color: #1c1b22; font-weight: 600; }
+.timing input:focus-visible + span { outline: 2px solid var(--lav); outline-offset: 2px; }
+
+.signup .btn { background: var(--lav); border-color: var(--lav); color: #1c1b22; width: 100%; margin-top: 4px; }
+.signup .btn:hover { background: #fff; border-color: #fff; color: #1c1b22; }
 .band .btn { background: var(--lav); border-color: var(--lav); color: #1c1b22; }
 .band .btn:hover { background: #fff; border-color: #fff; color: #1c1b22; }
+
+.signup-status { margin: 14px 0 0; text-align: center; font-size: 0.95rem; min-height: 1.2em; opacity: 0; transition: opacity 160ms ease; }
+.signup-status.show { opacity: 1; }
+.signup-status.ok { color: #b6e2bd; }
+.signup-status.err { color: #f0b3bf; }
+.signup-status.pending { color: #d7c8ef; }
 
 /* ---------- Footer ---------- */
 
@@ -234,7 +259,9 @@ section { padding: 72px 0; }
   .section-rule h2 { font-size: 1.7rem; }
   .perk-list { grid-template-columns: 1fr; }
   .workshop .cta-row { flex-direction: column; align-items: flex-start; }
+  .signup .field-row { flex-direction: column; gap: 0; }
   .signup input { min-width: 0; width: 100%; }
   .signup .btn { width: 100%; }
+  .timing { justify-content: center; }
   section { padding: 48px 0; }
 }

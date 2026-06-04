@@ -31,3 +31,13 @@
   drives to the email signup. Added a studio gallery (gnome, diamonds, flyer) and used the gnome
   as the hero image.
 - Updated `CLAUDE.md` (brand, status, real workshop facts, images-in-use table).
+
+### Session 3 (2026-06-04)
+- Mobile-tuned the layout and verified at a true 390px CSS width with headless Edge: fixed a
+  horizontal-overflow bug (decorative hero offset panel) that was clipping the hero title, made
+  the header non-sticky on phones, centered hero/about, single-column perks, full-width signup,
+  and made the gallery flyer a tappable link cropped from the top so its headline shows.
+- Published: `git init`, committed, created public repo **flylow3d/fluxandthread**, pushed, and
+  enabled GitHub Pages (main/root). Verified live: page + all images + CSS return 200 at
+  **https://flylow3d.github.io/fluxandthread/**.
+- To deploy future edits: `git add` + `git commit` + `git push` → Pages rebuilds in ~30–60s.

@@ -195,12 +195,31 @@
     <div class="container">
       <h2>Save your spot &amp; get updates</h2>
       <p>
-        Be first to hear workshop dates, pattern drops, and studio news. Drop your email &mdash;
-        and tell us in your reply whether weekday afternoons or weekends work best for you.
+        Be first to hear workshop dates, pattern drops, and studio news &mdash; and help Sarah
+        plan by telling her when works best for you.
       </p>
-      <form class="signup" onsubmit="alert('Thanks! Email signup wiring comes next — this is a mockup.');return false;">
-        <input type="email" placeholder="your@email.com" aria-label="Email address" required>
+      <form id="signup-form" class="signup">
+        <!-- Web3Forms: free form-to-email. Paste the access key below to go live. -->
+        <input type="hidden" name="access_key" value="PASTE-YOUR-WEB3FORMS-ACCESS-KEY-HERE">
+        <input type="hidden" name="subject" value="New Flux + Thread workshop signup">
+        <input type="hidden" name="from_name" value="Flux + Thread website">
+        <!-- honeypot (hidden from people, catches bots) -->
+        <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+
+        <div class="field-row">
+          <input type="text" name="name" placeholder="Your name (optional)" aria-label="Your name">
+          <input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
+        </div>
+
+        <fieldset class="timing">
+          <legend>Which works better for you?</legend>
+          <label><input type="radio" name="timing_preference" value="Weekday afternoons"><span>Weekday afternoons</span></label>
+          <label><input type="radio" name="timing_preference" value="Weekends"><span>Weekends</span></label>
+          <label><input type="radio" name="timing_preference" value="Either works"><span>Either works</span></label>
+        </fieldset>
+
         <button type="submit" class="btn">Keep Me Posted</button>
+        <p id="signup-status" class="signup-status" role="status" aria-live="polite"></p>
       </form>
     </div>
   </section>
@@ -219,6 +238,37 @@
     </div>
   </div>
 </footer>
+
+<script>
+(function () {
+  var form = document.getElementById('signup-form');
+  if (!form) return;
+  var statusEl = document.getElementById('signup-status');
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'signup-status show ' + (kind || ''); }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var key = form.elements['access_key'].value;
+    // Not yet activated: don't fail loudly — thank them and move on.
+    if (!key || key.indexOf('PASTE') !== -1) {
+      setStatus('Thanks! Sign-up goes live in just a moment — please check back soon.', 'pending');
+      return;
+    }
+    setStatus('Sending…', '');
+    fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(form) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.success) {
+          form.reset();
+          setStatus('🎉 You’re on the list! Sarah will be in touch with workshop dates.', 'ok');
+        } else {
+          setStatus('That didn’t go through. Please try again, or email hello@fluxandthread.com.', 'err');
+        }
+      })
+      .catch(function () { setStatus('Network hiccup — please try again in a moment.', 'err'); });
+  });
+})();
+</script>
 
 </body>
 </html>
