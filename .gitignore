@@ -1,0 +1,29 @@
+# Whitelist approach: ignore everything in root, then explicitly include.
+# Keeps scratch files, secrets, and editor noise from ever being committed.
+
+/*
+!/.gitignore
+!/.env.example
+!/README.md
+!/index.html
+!/styles.css
+!/CLAUDE.md
+!/SESSION_LOG.md
+!/Images/
+!/tools/
+!/.claude/
+
+# Inside whitelisted directories, ignore typical OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.tmp
+
+# Secrets — NEVER commit
+.env
+
+# Python build / cache artifacts
+tools/__pycache__/
+tools/.venv/
+tools/*.pyc
