@@ -5,6 +5,7 @@
 !/.gitignore
 !/.env.example
 !/README.md
+!/SETUP.md
 !/index.html
 !/CNAME
 !/styles.css
