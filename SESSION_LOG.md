@@ -41,3 +41,14 @@
   enabled GitHub Pages (main/root). Verified live: page + all images + CSS return 200 at
   **https://flylow3d.github.io/fluxandthread/**.
 - To deploy future edits: `git add` + `git commit` + `git push` → Pages rebuilds in ~30–60s.
+
+### Session 4 (2026-06-04)
+- Built the real email signup form (was a mockup `alert()`). Uses **Web3Forms** (free, no
+  backend, emails submissions). Captures name + email + a **timing-preference** field (Weekday
+  afternoons / Weekends / Either works) as lavender pill radios — turning the flyer's
+  weekday-vs-weekend question into structured data for Sarah.
+- AJAX submit with inline success/error status; **graceful fallback** so it shows a friendly
+  "goes live shortly" message (never an error) until the access key is pasted in. Mobile-tuned.
+- Committed + pushed (live). **PENDING:** user to get a free Web3Forms access key from
+  web3forms.com and paste it into the `access_key` hidden field in `index.html` to activate;
+  then test a real submission end-to-end.
