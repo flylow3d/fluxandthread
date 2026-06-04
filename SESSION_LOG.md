@@ -52,3 +52,16 @@
 - Committed + pushed (live). **PENDING:** user to get a free Web3Forms access key from
   web3forms.com and paste it into the `access_key` hidden field in `index.html` to activate;
   then test a real submission end-to-end.
+
+### Session 5 (2026-06-04)
+- Registered **fluxandthread.com** at Porkbun (user's choice; dislikes IONOS). Walked the user
+  through the Porkbun (Cloudflare-backed) DNS editor from a screenshot: deleted the two default
+  parking records (ALIAS + wildcard CNAME → uixie.porkbun.com), kept the MX/SPF email records,
+  added four apex `A` records → GitHub Pages IPs and a `www` `CNAME` → flylow3d.github.io.
+- Verified DNS propagation from here, then attached the domain on GitHub: committed a `CNAME`
+  file (`fluxandthread.com`) and whitelisted it in `.gitignore`. GitHub provisioned the
+  Let's Encrypt cert (authorization_pending → approved) and we enabled `https_enforced=true`
+  (note: gh api needs `-F` for the boolean, not `-f`).
+- Verified end-to-end: https apex 200 + real content + images, www→apex 301 redirect, cert
+  approved. **Site is live at https://fluxandthread.com.**
+- Still pending from session 4: Web3Forms access key to activate the signup form.

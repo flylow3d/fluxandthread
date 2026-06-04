@@ -27,9 +27,16 @@ content is real so far.
 
 ## Status
 
-**LIVE** at https://flylow3d.github.io/fluxandthread/ — repo `flylow3d/fluxandthread` (public),
-GitHub Pages from `main` / root. To update: edit locally, `git add` + `git commit` + `git push`;
-Pages rebuilds in ~30–60s. Mobile-verified at 390px (headless Edge).
+**LIVE** at **https://fluxandthread.com** (custom domain, HTTPS enforced). Repo
+`flylow3d/fluxandthread` (public), GitHub Pages from `main` / root; `CNAME` file holds the
+domain. The old `flylow3d.github.io/fluxandthread` URL now redirects here. To update: edit
+locally, `git add` + `git commit` + `git push`; Pages rebuilds in ~30–60s. Mobile-verified at
+390px (headless Edge).
+
+**Domain/DNS:** `fluxandthread.com` registered at **Porkbun** (Cloudflare-backed DNS). Records:
+four apex `A` records → GitHub Pages IPs (185.199.108–111.153), `www` `CNAME` → flylow3d.github.io.
+Porkbun's default email records (MX → fwd1/fwd2.porkbun.com, SPF TXT) were kept, so
+`hello@fluxandthread.com`-style email forwarding can be set up later.
 
 **Landing page rebuilt with real content** (2026-06-04). Single static page: sticky nav with
 the real logo, hero (gnome suncatcher photo), "what we offer", **featured first workshop** (real
