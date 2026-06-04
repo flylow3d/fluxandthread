@@ -6,6 +6,7 @@
 !/.env.example
 !/README.md
 !/index.html
+!/CNAME
 !/styles.css
 !/CLAUDE.md
 !/SESSION_LOG.md
