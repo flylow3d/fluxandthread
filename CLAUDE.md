@@ -52,10 +52,12 @@ gathering interest + asking weekday-afternoon vs weekend preference. Do not inve
 **Open items / next steps:**
 - Get real workshop dates + price from Sarah once decided; replace the "dates being planned" note
   with a real schedule and a Reserve flow.
-- **Email signup: built, awaiting activation.** Real Web3Forms form is live (name + email +
-  timing-preference pills) but needs a free access key pasted into the `access_key` hidden field
-  in `index.html`. Get key at web3forms.com (emailed instantly). Until then it shows a graceful
-  "goes live shortly" message. After pasting: commit, push, test a real submission.
+- **Email signup: built, activation intentionally deferred.** Real Web3Forms form is live (name +
+  email + timing-preference pills) but needs a free access key in the `access_key` hidden field in
+  `index.html`. Deferred by user's choice: the key should be created with **Sarah's** email so
+  signups go to her inbox (get key at web3forms.com — emailed instantly). Until then it shows a
+  graceful "goes live shortly" message, so the site is safe to share. After pasting: commit, push,
+  test a real submission.
 - More studio photos welcome (gallery currently reuses the 2 work photos + the flyer).
 - Interactive stack (booking/shop/payments): **deferred** — keep iterating on the brochure
   mockup for now; revisit when content is in place.
