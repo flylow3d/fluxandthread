@@ -49,9 +49,27 @@ grinding / foiling & soldering / finishing; perks = no experience needed, all ma
 **4 spots**, take home a finished piece. **Dates are NOT set yet** — the flyer (and the site) is
 gathering interest + asking weekday-afternoon vs weekend preference. Do not invent dates/prices.
 
+**Workshops pages added** (2026-06-04). The nav "Workshop" link, the featured-workshop CTA, and
+the offerings "Workshops" card now open a dedicated **`workshops.html`** listing page, which links
+to a per-workshop detail page **`workshop-copper-foil-beginner.html`** (date/time/location/deposit
++ special notes + a "Sign Up Now" reservation form). Future workshops follow the
+`workshop-<slug>.html` scheme (copy the detail page, edit content + the hidden `workshop`/`subject`
+form fields, add a card to `workshops.html`). New pages duplicate the header/footer inline (no
+partials — GitHub Pages has no build step) and are whitelisted in `.gitignore` via `!/workshops.html`
++ `!/workshop-*.html`. **Booking model = "start simple, manual deposits"** (Sarah's choice): the
+reservation form emails her via Web3Forms (same access key), then she sends a **Square** deposit
+link and confirms personally. An optional "Pay Your Deposit" Square button is built into the
+confirmation but **gated** — it stays hidden until the placeholder `square.link/REPLACE-…` href is
+swapped for a real Square link. All workshop specifics are clearly-marked amber `[… TBD]`
+placeholders (`.placeholder` class) until Sarah provides real values.
+
 **Open items / next steps:**
+- **Fill in the workshop placeholders** in `workshop-copper-foil-beginner.html` (+ the listing card
+  in `workshops.html`): real **date, time, location, deposit amount, special notes**, the hidden
+  `workshop` form field's date, and the **Square deposit link** (replace the `REPLACE-…` href to
+  un-gate the Pay button). Search for `[` / `.placeholder` / `REPLACE` to find every spot.
 - Get real workshop dates + price from Sarah once decided; replace the "dates being planned" note
-  with a real schedule and a Reserve flow.
+  with a real schedule (the Reserve flow now exists).
 - **Email signup: ACTIVATED.** Web3Forms access key (tied to `fluxandthread.com`) is pasted into
   the `access_key` field in `index.html`, committed + pushed — the form now emails real signups to
   Sarah's inbox. **Pending Sarah's confirmation** that a real browser submission lands (server-side
@@ -97,6 +115,8 @@ density per row/column; see session 2 in `SESSION_LOG.md`).
 ```
 Sarah_Stained Glass/
 ├── index.html              ← the landing page (real content)
+├── workshops.html          ← Workshops listing page (nav "Workshop" → here)
+├── workshop-copper-foil-beginner.html  ← per-workshop detail + reservation form
 ├── styles.css              ← stained-glass aesthetic
 ├── Images/                 ← photos & generated figures (add real ones here)
 ├── tools/                  ← Gemini image-generation helper (copied from MrGreenlee)

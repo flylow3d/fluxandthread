@@ -234,6 +234,61 @@ section { padding: 72px 0; }
 .site-footer .social a { color: var(--ink); margin: 0 10px; border: none; font-weight: 600; }
 .site-footer .social a:hover { color: var(--accent); }
 
+/* ---------- Workshops listing & detail ---------- */
+
+.card-cta { margin-top: 18px; font-size: 0.72rem; padding: 11px 22px; }
+
+.workshop-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; }
+.workshop-listing-card {
+  background: var(--bg-soft); border: 1px solid var(--rule); border-top: 4px solid var(--lav);
+  border-radius: 3px; overflow: hidden; min-width: 0;
+}
+.workshop-listing-card > img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.workshop-listing-card .body { padding: 24px 26px 28px; }
+.workshop-listing-card h3 { font-size: 1.7rem; font-style: italic; margin: 6px 0 4px; overflow-wrap: break-word; }
+.workshop-listing-card p { color: var(--muted); font-size: 0.98rem; margin: 0 0 20px; }
+
+/* labeled meta rows (listing card) */
+.workshop-meta { margin: 8px 0 14px; font-size: 0.95rem; }
+.workshop-meta div { margin-bottom: 3px; }
+.workshop-meta .label, .workshop-facts .label {
+  display: inline-block; min-width: 84px; text-transform: uppercase; letter-spacing: 0.12em;
+  font-size: 0.72rem; font-weight: 600; color: var(--lav-dk);
+}
+
+/* prominent facts panel (detail page) */
+.workshop-facts {
+  background: var(--lav-soft); border-left: 3px solid var(--lav-dk);
+  padding: 18px 22px; border-radius: 0 3px 3px 0; margin: 4px 0 24px; color: var(--ink); font-size: 1rem;
+}
+.workshop-facts div { margin-bottom: 5px; }
+.workshop-facts div:last-child { margin-bottom: 0; }
+
+/* back link on detail page */
+.back-link { margin: 0 0 20px; }
+.back-link a { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.76rem; font-weight: 600; }
+
+/* inline flag for unfinalized values — easy to spot and to find */
+.placeholder { color: var(--g-amber); border-bottom: 1px dashed var(--g-amber); font-style: italic; }
+
+/* extra reservation-form fields inside the dark band */
+.signup input[type="tel"], .signup select, .signup textarea {
+  font-family: 'Lora', Georgia, serif; font-size: 1rem; padding: 13px 16px; width: 100%;
+  border: 1px solid #4a4458; background: #2a2833; color: #fff; border-radius: 2px; margin-bottom: 12px;
+}
+.signup textarea { min-height: 88px; resize: vertical; }
+.signup select { appearance: none; cursor: pointer; }
+.signup textarea::placeholder { color: #8d8799; }
+.signup input[type="tel"]:focus, .signup select:focus, .signup textarea:focus { outline: none; border-color: var(--lav); }
+
+/* post-submit confirmation panel (dark band) */
+.reserve-confirm { max-width: 560px; margin: 8px auto 0; text-align: center; }
+.reserve-confirm h3 { color: #fff; font-size: 1.8rem; font-style: italic; margin-bottom: 10px; }
+.reserve-confirm p { color: #c9c2d6; margin: 0 auto 18px; }
+.reserve-confirm .btn { margin-bottom: 14px; }
+.reserve-confirm .fineprint { font-size: 0.86rem; }
+.reserve-confirm .fineprint a { color: var(--lav); }
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 860px) {
@@ -257,6 +312,8 @@ section { padding: 72px 0; }
   .hero-title { font-size: 2.3rem; }
   .hero-figure::before { inset: -10px -8px 12px 8px; }
   .section-rule h2 { font-size: 1.7rem; }
+  .workshop h2 { font-size: 2rem; }
+  .workshop-facts .label { min-width: 70px; }
   .perk-list { grid-template-columns: 1fr; }
   .workshop .cta-row { flex-direction: column; align-items: flex-start; }
   .signup .field-row { flex-direction: column; gap: 0; }

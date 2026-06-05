@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stained Glass Workshop — Flux + Thread</title>
+<meta name="description" content="Beginner copper-foil stained glass workshop at Flux + Thread. Learn cutting, grinding, foiling, and soldering, and take home a finished piece. Small class — reserve your spot.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <img src="Images/logo-badge.png" alt="Flux + Thread logo">
+      <span class="wordmark">Flux <span class="plus">+</span> Thread</span>
+    </a>
+    <nav class="site-nav">
+      <a href="workshops.html">Workshop</a>
+      <a href="index.html#gallery">Gallery</a>
+      <a href="index.html#shop">Shop</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#signup" class="btn">Get Updates</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ WORKSHOP DETAIL ============ -->
+  <section class="workshop">
+    <div class="container">
+      <p class="back-link"><a href="workshops.html">&larr; All workshops</a></p>
+      <div class="grid">
+        <div class="photo">
+          <img src="Images/inprocess-diamonds.png" alt="Copper-foiled stained glass hexagons in progress, with cut glass pieces">
+        </div>
+        <div>
+          <div class="smallcaps">Beginner &middot; Copper Foil</div>
+          <h2>Stained Glass Workshop</h2>
+          <p class="lead-in">
+            Have you ever wanted to learn how to make stained glass? Join a small-group, hands-on
+            workshop and build your own piece from the first cut to the final polish.
+          </p>
+
+          <div class="workshop-facts">
+            <div><span class="label">Date</span> <span class="placeholder">[DATE TBD]</span></div>
+            <div><span class="label">Time</span> <span class="placeholder">[TIME TBD]</span></div>
+            <div><span class="label">Location</span> <span class="placeholder">[LOCATION TBD]</span></div>
+            <div><span class="label">Deposit</span> <span class="placeholder">[$DEPOSIT TBD]</span> to hold your seat</div>
+          </div>
+
+          <div class="smallcaps learn-title">What you'll learn</div>
+          <ul class="learn-list">
+            <li>Introduction to stained glass</li>
+            <li>Glass cutting &amp; grinding</li>
+            <li>Foiling &amp; soldering</li>
+            <li>Finishing your stained glass piece</li>
+          </ul>
+
+          <ul class="perk-list">
+            <li>No experience necessary</li>
+            <li>All materials provided</li>
+            <li>Small class size (4 spots)</li>
+            <li>Take home a finished project</li>
+          </ul>
+
+          <div class="note">
+            <strong>Good to know:</strong> <span class="placeholder">[SPECIAL NOTES TBD &mdash; e.g. wear
+            closed-toe shoes, arrive 10 minutes early, ages 16+]</span>
+          </div>
+
+          <div class="cta-row">
+            <a href="#reserve" class="btn">Sign Up Now</a>
+            <a href="Images/flyer.jpg" target="_blank" rel="noopener" class="flyer-link">View the flyer &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESERVATION FORM ============ -->
+  <section id="reserve" class="band">
+    <div class="container">
+      <h2>Reserve your spot</h2>
+      <p>
+        Fill this out and Sarah will email you to confirm your seat and send a link to pay your
+        deposit. Spots are limited to four, so reserve early!
+      </p>
+
+      <form id="reserve-form" class="signup">
+        <!-- Web3Forms: free form-to-email. -->
+        <input type="hidden" name="access_key" value="7c79ef98-6a4b-4696-a94f-9fb109ec653f">
+        <input type="hidden" name="subject" value="Workshop reservation — Copper-Foil Beginner">
+        <input type="hidden" name="from_name" value="Flux + Thread website">
+        <!-- Identifies which workshop. When you copy this page for a new workshop, change this line. -->
+        <input type="hidden" name="workshop" value="Copper-Foil Beginner Workshop — [DATE TBD]">
+        <!-- honeypot (hidden from people, catches bots) -->
+        <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+
+        <div class="field-row">
+          <input type="text" name="name" placeholder="Your name" aria-label="Your name" required>
+          <input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
+        </div>
+
+        <div class="field-row">
+          <input type="tel" name="phone" placeholder="Phone (so Sarah can send your deposit link)" aria-label="Phone number">
+          <select name="seats" aria-label="How many seats?">
+            <option value="1 seat">1 seat</option>
+            <option value="2 seats">2 seats</option>
+            <option value="3 seats">3 seats</option>
+            <option value="4 seats">4 seats</option>
+          </select>
+        </div>
+
+        <textarea name="notes" rows="3" placeholder="Questions or anything we should know (optional)" aria-label="Questions or notes"></textarea>
+
+        <button type="submit" class="btn">Request My Spot</button>
+        <p id="reserve-status" class="signup-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <!-- Shown after a successful submission -->
+      <div id="reserve-confirm" class="reserve-confirm" hidden>
+        <h3>Request received &mdash; thank you!</h3>
+        <p>
+          Your spot is held while Sarah confirms. She&rsquo;ll email you shortly with the details and
+          a link to pay your <strong>deposit</strong> (<span class="placeholder">[$DEPOSIT TBD]</span>
+          holds your seat &mdash; it&rsquo;s confirmed once the deposit is paid). When you pay, Square
+          emails your receipt automatically.
+        </p>
+        <!-- Optional Square deposit button. While the href still contains REPLACE, the script hides it. -->
+        <a id="deposit-btn" class="btn" href="https://square.link/REPLACE-WITH-SQUARE-DEPOSIT-LINK" target="_blank" rel="noopener" hidden>Pay Your Deposit</a>
+        <p class="fineprint">Questions? Email <a href="mailto:hello@fluxandthread.com">hello@fluxandthread.com</a>.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="Images/logo-badge.png" alt="Flux + Thread logo">
+    <div class="tag">Handmade with love</div>
+    <div>Flux + Thread &middot; Stained Glass Studio &amp; Workshops</div>
+    <div class="social">
+      <a href="https://www.instagram.com/fluxandthread/" target="_blank" rel="noopener">Instagram</a>
+      <a href="index.html#signup">Get Updates</a>
+      <a href="mailto:hello@fluxandthread.com">Email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var form = document.getElementById('reserve-form');
+  if (!form) return;
+  var statusEl = document.getElementById('reserve-status');
+  var confirmEl = document.getElementById('reserve-confirm');
+  var depositBtn = document.getElementById('deposit-btn');
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'signup-status show ' + (kind || ''); }
+
+  // Only reveal the Square deposit button once a real link is in place.
+  function showConfirm() {
+    if (depositBtn && depositBtn.getAttribute('href').indexOf('REPLACE') === -1) {
+      depositBtn.hidden = false;
+    }
+    confirmEl.hidden = false;
+    confirmEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var key = form.elements['access_key'].value;
+    // Not yet activated: don't fail loudly — thank them and move on.
+    if (!key || key.indexOf('PASTE') !== -1) {
+      setStatus('Thanks! Reservations go live in just a moment — please check back soon.', 'pending');
+      return;
+    }
+    setStatus('Sending…', '');
+    fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(form) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.success) {
+          form.reset();
+          setStatus('', '');
+          showConfirm();
+        } else {
+          setStatus('That didn’t go through. Please try again, or email hello@fluxandthread.com.', 'err');
+        }
+      })
+      .catch(function () { setStatus('Network hiccup — please try again in a moment.', 'err'); });
+  });
+})();
+</script>
+
+</body>
+</html>
