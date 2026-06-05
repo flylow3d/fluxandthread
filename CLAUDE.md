@@ -52,12 +52,15 @@ gathering interest + asking weekday-afternoon vs weekend preference. Do not inve
 **Open items / next steps:**
 - Get real workshop dates + price from Sarah once decided; replace the "dates being planned" note
   with a real schedule and a Reserve flow.
-- **Email signup: built, activation intentionally deferred.** Real Web3Forms form is live (name +
-  email + timing-preference pills) but needs a free access key in the `access_key` hidden field in
-  `index.html`. Deferred by user's choice: the key should be created with **Sarah's** email so
-  signups go to her inbox (get key at web3forms.com — emailed instantly). Until then it shows a
-  graceful "goes live shortly" message, so the site is safe to share. After pasting: commit, push,
-  test a real submission.
+- **Email signup: ACTIVATED.** Web3Forms access key (tied to `fluxandthread.com`) is pasted into
+  the `access_key` field in `index.html`, committed + pushed — the form now emails real signups to
+  Sarah's inbox. **Pending Sarah's confirmation** that a real browser submission lands (server-side
+  tests are blocked by Cloudflare's bot challenge, which is expected). Note: Web3Forms usually
+  sends a one-time **verification email** that must be clicked before submissions deliver.
+- **Form error fallback** still references `hello@fluxandthread.com`, which isn't an active mailbox
+  yet — repoint to a real address or set up the Porkbun forwarding.
+- **Publishing workflow:** Claude handles all git (Sarah just says "publish"). git + stored GitHub
+  creds are already set up on this laptop — nothing to install.
 - More studio photos welcome (gallery currently reuses the 2 work photos + the flyer).
 - Interactive stack (booking/shop/payments): **deferred** — keep iterating on the brochure
   mockup for now; revisit when content is in place.
