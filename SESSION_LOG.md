@@ -85,3 +85,37 @@
 - Noted (not yet changed) that the form's error-path fallback points at `hello@fluxandthread.com`,
   which isn't an active mailbox yet — offered to repoint it to her personal email or leave it for
   when the Porkbun forwarding is set up.
+
+### Session 7 (2026-06-04)
+- Met **Sarah** (studio owner); she asked to turn the nav "Workshop" link into a real
+  multi-page booking flow. Planned in plan mode (Explore + Plan agents), confirmed scope with
+  her: dedicated Workshops page → per-workshop detail page (date/time/location/special notes +
+  Sign Up Now) → reservation → deposit → confirmation.
+- **Decisions captured:** booking model = **"start simple, manual deposits"** (form emails
+  Sarah, she sends a deposit link + confirms personally); payments via **Square** (she has an
+  account); workshop specifics **not final** → built with clearly-marked amber `[… TBD]`
+  placeholders. Full-automation booking tool deferred to a later phase.
+- **Built two new pages:** `workshops.html` (listing; one card now, grid ready for more) and
+  `workshop-copper-foil-beginner.html` (detail + reservation form). Both copy the existing
+  header/footer inline (no partials on GitHub Pages) and reuse the brand CSS. Future workshops
+  follow `workshop-<slug>.html` (copy page, edit content + hidden `workshop`/`subject` fields,
+  add a listing card).
+- **Reservation form** reuses the Web3Forms pattern + the live access key (name/email/phone/
+  seats/notes, hidden `workshop` identifier). On success it reveals a confirmation panel with a
+  **gated Square "Pay Your Deposit" button** — JS keeps it hidden while the href still contains
+  `REPLACE`, so no dead button can ship. Added new CSS (`.workshop-list/-listing-card/-meta/
+  -facts`, `.placeholder`, `.reserve-confirm`, dark-band tel/select/textarea styling).
+- **Edits to `index.html`:** nav "Workshop" → `workshops.html`; featured-workshop CTA → "See
+  Workshops & Reserve"; added a "See Workshops" ghost button to the offerings card.
+- **Verified** with headless Edge at desktop + 390px. Caught & fixed a real mobile
+  horizontal-overflow bug (grid item needed `min-width:0`/no `flex-start`) and added a 640px
+  `.workshop h2` size guard; confirmed new pages render consistently with the live homepage.
+- **Caught a `.gitignore` trap:** the whitelist `/*` ignore was silently excluding the new
+  `.html` files — added `!/workshops.html` + `!/workshop-*.html` so current and future workshop
+  pages publish.
+- **Published** (Sarah chose "publish now with placeholders"): two commits — docs for the email
+  activation, then the workshops feature. Verified live on `fluxandthread.com`: listing + detail
+  pages HTTP 200, homepage nav points to the new page, Square button correctly gated.
+- **PENDING from Sarah:** real date/time/location/deposit amount/special notes, the hidden
+  `workshop` field's date, and the **Square deposit link** (un-gates the Pay button); plus the
+  end-to-end form test from her phone. Search `[`, `.placeholder`, `REPLACE` to find every spot.
