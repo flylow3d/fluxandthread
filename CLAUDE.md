@@ -123,6 +123,7 @@ Sarah_Stained Glass/
 ├── index.html              ← the landing page (real content)
 ├── workshops.html          ← Workshops listing page (nav "Workshop" → here)
 ├── workshop-copper-foil-beginner.html  ← per-workshop detail + reservation form
+├── about.html              ← About page (nav "About" → here); Sarah's portrait + bio
 ├── styles.css              ← stained-glass aesthetic
 ├── Images/                 ← photos & generated figures (add real ones here)
 ├── tools/                  ← Gemini image-generation helper (copied from MrGreenlee)
