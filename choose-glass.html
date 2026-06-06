@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  Choose Your Glass — guests pick one glass sheet per part of their project.
+  PER WORKSHOP: this page is for the Copper-Foil Beginner workshop. A different workshop has a
+  different pattern (different parts), so copy this file to choose-glass-<slug>.html and edit the
+  <legend> names, the name="glass_for_*" keys, the hidden subject/workshop fields, the back-link,
+  and the session <option>s. (.gitignore already whitelists choose-glass*.html.)
+
+  REAL PHOTOS LATER: each swatch ships as a colour placeholder tile. To use a real photo, replace
+      <span class="sw-tile" style="--sw:#xxxxxx" aria-hidden="true"></span>
+  with
+      <img class="sw-tile" src="Images/glass/no-12-lavender-wispy.jpg" alt="">
+  (put photos in Images/glass/ — that folder needs no .gitignore change.)
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choose Your Glass — Flux + Thread</title>
+<meta name="description" content="Workshop guests: pick the exact sheet of glass for each part of your project before class day. Many sheets are one-of-a-kind — reserved for you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <img src="Images/logo-badge.png" alt="Flux + Thread logo">
+      <span class="wordmark">Flux <span class="plus">+</span> Thread</span>
+    </a>
+    <nav class="site-nav">
+      <a href="workshops.html">Workshop</a>
+      <a href="index.html#gallery">Gallery</a>
+      <a href="index.html#shop">Shop</a>
+      <a href="about.html">About</a>
+      <a href="index.html#signup" class="btn">Get Updates</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ INTRO ============ -->
+  <section class="glass-intro">
+    <div class="container">
+      <p class="back-link"><a href="workshop-copper-foil-beginner.html">&larr; Back to the workshop</a></p>
+      <div class="section-rule"><h2>Choose Your Glass</h2></div>
+      <p class="section-sub">
+        Your piece is made of a few parts &mdash; and you get to choose the exact sheet of glass for
+        each one. Pick a sheet for every part below, and Sarah will set those exact pieces aside for
+        your class. Much of this glass is one-of-a-kind inherited stock, so
+        <strong>when it&rsquo;s gone, it&rsquo;s gone</strong> &mdash; the sheet you choose is reserved
+        just for you.
+      </p>
+      <p class="section-sub">
+        <span class="placeholder">[PHOTOS TBD &mdash; the swatches below are colour stand-ins until Sarah photographs her real sheets]</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ GLASS PICKER FORM ============ -->
+  <section class="glass-picker">
+    <div class="container">
+      <form id="glass-form" class="signup glass-form">
+        <!-- Web3Forms: free form-to-email. -->
+        <input type="hidden" name="access_key" value="7c79ef98-6a4b-4696-a94f-9fb109ec653f">
+        <input type="hidden" name="subject" value="Glass picks — Copper-Foil Beginner Workshop">
+        <input type="hidden" name="from_name" value="Flux + Thread website">
+        <!-- Which workshop. Change this line when you copy the page for a new workshop. -->
+        <input type="hidden" name="workshop" value="Copper-Foil Beginner Workshop">
+        <!-- honeypot (hidden from people, catches bots) -->
+        <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+
+        <!-- Guest details so Sarah can match these picks to a booking -->
+        <div class="glass-guest">
+          <div class="field-row">
+            <input type="text" name="name" placeholder="Your name" aria-label="Your name" required>
+            <input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
+          </div>
+          <label class="booking-label" for="session-select">Which class are these picks for?</label>
+          <!-- Keep these <option>s matching the workshop page's #session-select so picks map to a real booking. -->
+          <select id="session-select" name="session" class="light-select" aria-label="Choose your session date">
+            <option value="[SESSION 1 — DATE TBD]">[Session 1 &mdash; date TBD]</option>
+            <option value="[SESSION 2 — DATE TBD]">[Session 2 &mdash; date TBD]</option>
+            <option value="[SESSION 3 — DATE TBD]">[Session 3 &mdash; date TBD]</option>
+          </select>
+        </div>
+
+        <!-- ===== PATTERN PART 1 ===== -->
+        <fieldset class="glass-part" data-part="body">
+          <legend><span class="part-n">Part 1</span> Body <span class="placeholder">[PART NAME TBD]</span></legend>
+          <p class="part-hint">The main shape of your piece &mdash; pick the sheet it&rsquo;s cut from.</p>
+          <div class="swatch-grid">
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 12 — Lavender Wispy"><span class="sw-inner"><span class="sw-tile" style="--sw:#b79ad8" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Lavender Wispy</span><span class="sw-no">No. 12</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 07 — Sea Green Cathedral"><span class="sw-inner"><span class="sw-tile" style="--sw:#5f8a63" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Sea Green Cathedral</span><span class="sw-no">No. 07</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 21 — Amber Ripple (one of a kind)"><span class="sw-inner"><span class="sw-tile" style="--sw:#c47a2c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Amber Ripple</span><span class="sw-no">No. 21 &middot; one of a kind</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 15 — Plum Opalescent"><span class="sw-inner"><span class="sw-tile" style="--sw:#6a3d6e" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Plum Opalescent</span><span class="sw-no">No. 15</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 09 — Rose Streaky"><span class="sw-inner"><span class="sw-tile" style="--sw:#b06a82" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Rose Streaky</span><span class="sw-no">No. 09</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 18 — Deep Violet"><span class="sw-inner"><span class="sw-tile" style="--sw:#6f4f9c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Deep Violet</span><span class="sw-no">No. 18</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 02 — Clear Seedy"><span class="sw-inner"><span class="sw-tile" style="--sw:#dfe7ea" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Clear Seedy</span><span class="sw-no">No. 02</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 04 — Milk White Wispy"><span class="sw-inner"><span class="sw-tile" style="--sw:#f1ece4" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Milk White Wispy</span><span class="sw-no">No. 04</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 27 — Smoky Grey Granite (one of a kind)"><span class="sw-inner"><span class="sw-tile" style="--sw:#8c8794" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Smoky Grey Granite</span><span class="sw-no">No. 27 &middot; one of a kind</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+          </div>
+        </fieldset>
+
+        <!-- ===== PATTERN PART 2 ===== -->
+        <fieldset class="glass-part" data-part="accent">
+          <legend><span class="part-n">Part 2</span> Accent <span class="placeholder">[PART NAME TBD]</span></legend>
+          <p class="part-hint">The smaller accent pieces &mdash; choose a sheet that pops against your body colour.</p>
+          <div class="swatch-grid">
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 12 — Lavender Wispy"><span class="sw-inner"><span class="sw-tile" style="--sw:#b79ad8" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Lavender Wispy</span><span class="sw-no">No. 12</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 07 — Sea Green Cathedral"><span class="sw-inner"><span class="sw-tile" style="--sw:#5f8a63" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Sea Green Cathedral</span><span class="sw-no">No. 07</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 21 — Amber Ripple (one of a kind)"><span class="sw-inner"><span class="sw-tile" style="--sw:#c47a2c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Amber Ripple</span><span class="sw-no">No. 21 &middot; one of a kind</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 15 — Plum Opalescent"><span class="sw-inner"><span class="sw-tile" style="--sw:#6a3d6e" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Plum Opalescent</span><span class="sw-no">No. 15</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 09 — Rose Streaky"><span class="sw-inner"><span class="sw-tile" style="--sw:#b06a82" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Rose Streaky</span><span class="sw-no">No. 09</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 18 — Deep Violet"><span class="sw-inner"><span class="sw-tile" style="--sw:#6f4f9c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Deep Violet</span><span class="sw-no">No. 18</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 02 — Clear Seedy"><span class="sw-inner"><span class="sw-tile" style="--sw:#dfe7ea" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Clear Seedy</span><span class="sw-no">No. 02</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 04 — Milk White Wispy"><span class="sw-inner"><span class="sw-tile" style="--sw:#f1ece4" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Milk White Wispy</span><span class="sw-no">No. 04</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 27 — Smoky Grey Granite (one of a kind)"><span class="sw-inner"><span class="sw-tile" style="--sw:#8c8794" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Smoky Grey Granite</span><span class="sw-no">No. 27 &middot; one of a kind</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+          </div>
+        </fieldset>
+
+        <!-- ===== PATTERN PART 3 ===== -->
+        <fieldset class="glass-part" data-part="background">
+          <legend><span class="part-n">Part 3</span> Background <span class="placeholder">[PART NAME TBD]</span></legend>
+          <p class="part-hint">The surrounding pieces that frame your design.</p>
+          <div class="swatch-grid">
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 12 — Lavender Wispy"><span class="sw-inner"><span class="sw-tile" style="--sw:#b79ad8" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Lavender Wispy</span><span class="sw-no">No. 12</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 07 — Sea Green Cathedral"><span class="sw-inner"><span class="sw-tile" style="--sw:#5f8a63" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Sea Green Cathedral</span><span class="sw-no">No. 07</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 21 — Amber Ripple (one of a kind)"><span class="sw-inner"><span class="sw-tile" style="--sw:#c47a2c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Amber Ripple</span><span class="sw-no">No. 21 &middot; one of a kind</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 15 — Plum Opalescent"><span class="sw-inner"><span class="sw-tile" style="--sw:#6a3d6e" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Plum Opalescent</span><span class="sw-no">No. 15</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 09 — Rose Streaky"><span class="sw-inner"><span class="sw-tile" style="--sw:#b06a82" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Rose Streaky</span><span class="sw-no">No. 09</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 18 — Deep Violet"><span class="sw-inner"><span class="sw-tile" style="--sw:#6f4f9c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Deep Violet</span><span class="sw-no">No. 18</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 02 — Clear Seedy"><span class="sw-inner"><span class="sw-tile" style="--sw:#dfe7ea" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Clear Seedy</span><span class="sw-no">No. 02</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 04 — Milk White Wispy"><span class="sw-inner"><span class="sw-tile" style="--sw:#f1ece4" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Milk White Wispy</span><span class="sw-no">No. 04</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 27 — Smoky Grey Granite (one of a kind)"><span class="sw-inner"><span class="sw-tile" style="--sw:#8c8794" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Smoky Grey Granite</span><span class="sw-no">No. 27 &middot; one of a kind</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn glass-submit">Reserve My Glass</button>
+        <p id="glass-status" class="signup-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ CONFIRMATION ============ -->
+  <section class="band">
+    <div class="container">
+      <div id="glass-confirm" class="reserve-confirm" hidden>
+        <h3>Your glass is reserved &mdash; thank you!</h3>
+        <p>
+          Sarah will set aside the exact sheets you chose for your class. Because much of her glass is
+          one-of-a-kind inherited stock, your pieces are now held with your name on them. If anything
+          you picked turns out to be unavailable, she&rsquo;ll email you a close alternative before
+          class day.
+        </p>
+        <p class="fineprint">Questions? Email <a href="mailto:hello@fluxandthread.com">hello@fluxandthread.com</a>.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="Images/logo-badge.png" alt="Flux + Thread logo">
+    <div class="tag">Handmade with love</div>
+    <div>Flux + Thread &middot; Stained Glass Studio &amp; Workshops</div>
+    <div class="social">
+      <a href="https://www.instagram.com/fluxandthread/" target="_blank" rel="noopener">Instagram</a>
+      <a href="index.html#signup">Get Updates</a>
+      <a href="mailto:hello@fluxandthread.com">Email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var form = document.getElementById('glass-form');
+  if (!form) return;
+  var statusEl = document.getElementById('glass-status');
+  var confirmEl = document.getElementById('glass-confirm');
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'signup-status show ' + (kind || ''); }
+
+  function showConfirm() {
+    confirmEl.hidden = false;
+    confirmEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Nudge: every part needs a sheet, or Sarah can't cut the piece.
+    var parts = form.querySelectorAll('.glass-part');
+    var unchosen = [];
+    parts.forEach(function (fs) {
+      if (!fs.querySelector('input[type="radio"]:checked')) {
+        var lg = fs.querySelector('legend');
+        unchosen.push(lg ? lg.textContent.replace(/\[.*?\]/g, '').trim() : 'a part');
+      }
+    });
+    if (unchosen.length) {
+      setStatus('Please pick a sheet for: ' + unchosen.join(', ') + '.', 'err');
+      parts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    var key = form.elements['access_key'].value;
+    // Not yet activated: don't fail loudly — thank them and move on.
+    if (!key || key.indexOf('PASTE') !== -1) {
+      setStatus('Thanks! Glass picks go live in just a moment — please check back soon.', 'pending');
+      return;
+    }
+    setStatus('Sending…', '');
+    fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(form) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.success) {
+          form.reset();
+          setStatus('', '');
+          showConfirm();
+        } else {
+          setStatus('That didn’t go through. Please try again, or email hello@fluxandthread.com.', 'err');
+        }
+      })
+      .catch(function () { setStatus('Network hiccup — please try again in a moment.', 'err'); });
+  });
+})();
+</script>
+
+</body>
+</html>

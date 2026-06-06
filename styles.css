@@ -373,6 +373,66 @@ section { padding: 72px 0; }
 .about-page p { margin: 0 0 16px; }
 .about-page .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
 
+/* ---------- Choose Your Glass page ---------- */
+
+.booking-choose { width: 100%; text-align: center; margin: -8px 0 18px; }
+
+.glass-intro { background: var(--bg); }
+.glass-intro .section-sub { max-width: 640px; }
+.glass-intro .back-link { text-align: left; }
+
+.glass-form { max-width: 880px; margin: 0 auto; }
+/* form sits on light bg — re-light the inputs that .signup styles dark */
+.glass-form input[type="text"], .glass-form input[type="email"] {
+  background: var(--bg-soft); border: 1px solid var(--rule); color: var(--ink);
+}
+.glass-form input::placeholder { color: var(--muted); }
+.glass-form input:focus { outline: none; border-color: var(--lav-dk); box-shadow: 0 0 0 2px var(--lav-soft); }
+.glass-form .booking-label { display: block; margin: 6px 0 8px; }
+.glass-guest { max-width: 520px; margin: 0 auto 30px; }
+
+.glass-part {
+  border: 1px solid var(--rule); border-top: 4px solid var(--lav); border-radius: 4px;
+  background: var(--bg-soft); padding: 22px 22px 8px; margin: 0 0 26px; min-width: 0;
+}
+.glass-part legend {
+  font-family: 'Cormorant Garamond', Georgia, serif; color: var(--ink);
+  font-size: 1.5rem; font-style: italic; font-weight: 600; padding: 0 6px;
+}
+.glass-part .part-n {
+  display: inline-block; margin-right: 8px; vertical-align: middle;
+  font-family: 'Lora', Georgia, serif; font-style: normal; text-transform: uppercase;
+  letter-spacing: 0.12em; font-size: 0.7rem; color: var(--lav-dk);
+}
+.glass-part .part-hint { color: var(--muted); margin: 4px 0 16px; font-size: 0.95rem; }
+
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+
+/* swatch = visually-hidden radio + styled card (same trick as .timing) */
+.swatch { position: relative; display: block; cursor: pointer; min-width: 0; }
+.swatch input { position: absolute; opacity: 0; }
+.sw-inner {
+  display: block; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden;
+  background: var(--bg); transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+}
+.sw-tile { display: block; width: 100%; height: 96px; background: var(--sw, var(--lav-soft)); }
+img.sw-tile { object-fit: cover; }
+.sw-cap { display: block; padding: 9px 11px 11px; }
+.sw-name { display: block; font-weight: 600; color: var(--ink); font-size: 0.98rem; line-height: 1.2; }
+.sw-no { display: block; margin-top: 2px; font-size: 0.78rem; letter-spacing: 0.04em; color: var(--muted); }
+.sw-flag { display: inline-block; margin-top: 4px; font-size: 0.72rem; }
+.sw-check {
+  display: none; padding: 6px 11px; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em; color: #1c1b22; background: var(--lav);
+}
+.swatch:hover .sw-inner { border-color: var(--lav); transform: translateY(-1px); }
+.swatch input:focus-visible + .sw-inner { outline: 2px solid var(--lav-dk); outline-offset: 2px; }
+.swatch input:checked + .sw-inner { border-color: var(--lav-dk); box-shadow: 0 0 0 2px var(--lav-soft); }
+.swatch input:checked + .sw-inner .sw-check { display: block; }
+.swatch input:checked + .sw-inner .sw-flag { display: none; }
+
+.glass-submit { width: auto; min-width: 220px; }
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 860px) {
@@ -386,6 +446,8 @@ section { padding: 72px 0; }
   .about-page { grid-template-columns: 1fr; gap: 32px; text-align: center; }
   .portrait { max-width: 360px; margin: 0 auto; }
   .about-page .cta-row { justify-content: center; }
+  .swatch-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .glass-form { max-width: 560px; }
 }
 @media (max-width: 640px) {
   body { font-size: 16px; }
@@ -415,5 +477,9 @@ section { padding: 72px 0; }
   .signup input { min-width: 0; width: 100%; }
   .signup .btn { width: 100%; }
   .timing { justify-content: center; }
+  .swatch-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sw-tile { height: 84px; }
+  .glass-part { padding: 18px 16px 4px; }
+  .glass-submit { width: 100%; }
   section { padding: 48px 0; }
 }
