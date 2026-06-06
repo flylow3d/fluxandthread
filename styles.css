@@ -126,11 +126,12 @@ h1, h2, h3, h4 {
 
 .glass-bar { display: flex; height: 8px; }
 .glass-bar span { flex: 1; }
-.glass-bar .c1 { background: var(--g-amber); }
-.glass-bar .c2 { background: var(--g-sage); }
-.glass-bar .c3 { background: var(--g-rose); }
-.glass-bar .c4 { background: var(--g-plum); }
-.glass-bar .c5 { background: var(--g-lav); }
+/* lavender → deep purple → lavender (symmetric, on-brand) */
+.glass-bar .c1 { background: var(--lav); }
+.glass-bar .c2 { background: var(--lav-dk); }
+.glass-bar .c3 { background: var(--accent-dk); }
+.glass-bar .c4 { background: var(--lav-dk); }
+.glass-bar .c5 { background: var(--lav); }
 
 /* ---------- Sections ---------- */
 
