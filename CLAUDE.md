@@ -63,11 +63,17 @@ confirmation but **gated** — it stays hidden until the placeholder `square.lin
 swapped for a real Square link. All workshop specifics are clearly-marked amber `[… TBD]`
 placeholders (`.placeholder` class) until Sarah provides real values.
 
+**About page added** (2026-06-05). **`about.html`** — two-column framed portrait (`Images/sarah.jpg`)
++ Sarah's real first-person bio (church-youth-group start → inherited her husband's grandmother's
+supplies → community + new-mom closing). Nav "About" on every page now points here; the homepage
+`#about` section is intentionally left unchanged. The homepage **glass bar** was recolored to
+lavender→deep-purple→lavender (brand-only, was multi-color).
+
 **Open items / next steps:**
 - **Fill in the workshop placeholders** in `workshop-copper-foil-beginner.html` (+ the listing card
   in `workshops.html`): real **price, deposit amount, session date(s), spots-left count, time,
   location, special notes / age minimum**, real **workshop photos** (gallery thumbs currently reuse
-  inprocess-diamonds / gnome / flyer), and the **Square deposit link** (replace the `REPLACE-…` href
+  inprocess-diamonds + gnome), and the **Square deposit link** (replace the `REPLACE-…` href
   to un-gate the Pay button). Search for `[` / `.placeholder` / `REPLACE` to find every spot. The
   detail page now has a **Lucent-inspired layout** (2026-06-05): photo gallery + thumbnails, a
   right-column **booking box** (price, a "Choose your date" `<select>` that is the single source of
