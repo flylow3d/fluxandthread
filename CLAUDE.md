@@ -65,9 +65,15 @@ placeholders (`.placeholder` class) until Sarah provides real values.
 
 **Open items / next steps:**
 - **Fill in the workshop placeholders** in `workshop-copper-foil-beginner.html` (+ the listing card
-  in `workshops.html`): real **date, time, location, deposit amount, special notes**, the hidden
-  `workshop` form field's date, and the **Square deposit link** (replace the `REPLACE-…` href to
-  un-gate the Pay button). Search for `[` / `.placeholder` / `REPLACE` to find every spot.
+  in `workshops.html`): real **price, deposit amount, session date(s), spots-left count, time,
+  location, special notes / age minimum**, real **workshop photos** (gallery thumbs currently reuse
+  inprocess-diamonds / gnome / flyer), and the **Square deposit link** (replace the `REPLACE-…` href
+  to un-gate the Pay button). Search for `[` / `.placeholder` / `REPLACE` to find every spot. The
+  detail page now has a **Lucent-inspired layout** (2026-06-05): photo gallery + thumbnails, a
+  right-column **booking box** (price, a "Choose your date" `<select>` that is the single source of
+  truth for sessions — add/remove `<option>`s; keep the form's hidden `#session-field` default equal
+  to the first option — spots badge, Reserve button), and a structured What-you'll-learn / What's-
+  included / What-to-bring / Good-to-know description.
 - Get real workshop dates + price from Sarah once decided; replace the "dates being planned" note
   with a real schedule (the Reserve flow now exists).
 - **Email signup: ACTIVATED.** Web3Forms access key (tied to `fluxandthread.com`) is pasted into

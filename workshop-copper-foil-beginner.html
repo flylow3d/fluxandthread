@@ -30,15 +30,47 @@
 
 <main>
 
-  <!-- ============ WORKSHOP DETAIL ============ -->
+  <!-- ============ WORKSHOP HERO: gallery + booking box ============ -->
   <section class="workshop">
     <div class="container">
       <p class="back-link"><a href="workshops.html">&larr; All workshops</a></p>
       <div class="grid">
-        <div class="photo">
-          <img src="Images/inprocess-diamonds.png" alt="Copper-foiled stained glass hexagons in progress, with cut glass pieces">
+
+        <!-- Left: photo gallery (main image + thumbnails). Swap real workshop photos in later. -->
+        <div class="gallery">
+          <div class="gallery-main photo">
+            <img id="gallery-main-img" src="Images/inprocess-diamonds.png" alt="Copper-foiled stained glass hexagons in progress, with cut glass pieces">
+          </div>
+          <ul class="thumbs" role="list">
+            <li>
+              <button type="button" class="thumb is-active" aria-pressed="true"
+                      data-full="Images/inprocess-diamonds.png"
+                      data-alt="Copper-foiled stained glass hexagons in progress, with cut glass pieces"
+                      aria-label="Show: hexagons in progress">
+                <img src="Images/inprocess-diamonds.png" alt="">
+              </button>
+            </li>
+            <li>
+              <button type="button" class="thumb" aria-pressed="false"
+                      data-full="Images/gnome.png"
+                      data-alt="Finished stained glass gnome suncatcher with a glass heart"
+                      aria-label="Show: finished gnome suncatcher">
+                <img src="Images/gnome.png" alt="">
+              </button>
+            </li>
+            <li>
+              <button type="button" class="thumb" aria-pressed="false"
+                      data-full="Images/flyer.jpg"
+                      data-alt="Flux + Thread stained glass workshop flyer"
+                      aria-label="Show: workshop flyer">
+                <img src="Images/flyer.jpg" alt="">
+              </button>
+            </li>
+          </ul>
         </div>
-        <div>
+
+        <!-- Right: booking box -->
+        <div class="booking-box">
           <div class="smallcaps">Beginner &middot; Copper Foil</div>
           <h2>Stained Glass Workshop</h2>
           <p class="lead-in">
@@ -46,13 +78,42 @@
             workshop and build your own piece from the first cut to the final polish.
           </p>
 
-          <div class="workshop-facts">
-            <div><span class="label">Date</span> <span class="placeholder">[DATE TBD]</span></div>
-            <div><span class="label">Time</span> <span class="placeholder">[TIME TBD]</span></div>
-            <div><span class="label">Location</span> <span class="placeholder">[LOCATION TBD]</span></div>
-            <div><span class="label">Deposit</span> <span class="placeholder">[$DEPOSIT TBD]</span> to hold your seat</div>
+          <div class="booking-price">
+            <span class="placeholder">[$PRICE TBD]</span>
+            <span class="booking-price-note"><span class="placeholder">[$DEPOSIT TBD]</span> deposit holds your seat</span>
           </div>
 
+          <label class="booking-label" for="session-select">Choose your date</label>
+          <!-- SINGLE SOURCE OF TRUTH for session dates. Add or remove <option>s here only.
+               One date now; built to grow to several sessions later.
+               IMPORTANT: keep the form's hidden #session-field default value (further down)
+               equal to the FIRST option's value, so a date still submits if JS is off. -->
+          <select id="session-select" class="light-select" aria-label="Choose your session date">
+            <option value="[SESSION 1 — DATE TBD]">[Session 1 &mdash; date TBD]</option>
+            <option value="[SESSION 2 — DATE TBD]">[Session 2 &mdash; date TBD]</option>
+            <option value="[SESSION 3 — DATE TBD]">[Session 3 &mdash; date TBD]</option>
+          </select>
+
+          <div class="spots-badge"><span class="placeholder">[4]</span> spots left</div>
+
+          <a href="#reserve" class="btn booking-reserve">Reserve a Spot</a>
+
+          <ul class="booking-facts" role="list">
+            <li><span class="label">Time</span> <span class="placeholder">[TIME TBD]</span></li>
+            <li><span class="label">Location</span> <span class="placeholder">[LOCATION TBD]</span></li>
+          </ul>
+          <a href="Images/flyer.jpg" target="_blank" rel="noopener" class="flyer-link">View the flyer &rarr;</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STRUCTURED DESCRIPTION ============ -->
+  <section class="workshop-detail">
+    <div class="container">
+      <div class="detail-cols">
+        <div>
           <div class="smallcaps learn-title">What you'll learn</div>
           <ul class="learn-list">
             <li>Introduction to stained glass</li>
@@ -61,21 +122,27 @@
             <li>Finishing your stained glass piece</li>
           </ul>
 
-          <ul class="perk-list">
-            <li>No experience necessary</li>
-            <li>All materials provided</li>
-            <li>Small class size (4 spots)</li>
-            <li>Take home a finished project</li>
+          <div class="smallcaps learn-title">What's included</div>
+          <ul class="learn-list">
+            <li>All glass, copper foil, solder &amp; flux</li>
+            <li>Use of cutters, grinders &amp; soldering irons</li>
+            <li>Safety glasses and aprons</li>
+            <li>Your finished piece to take home</li>
+          </ul>
+        </div>
+        <div>
+          <div class="smallcaps learn-title">What to bring</div>
+          <ul class="perk-list one-col">
+            <li>Closed-toe shoes (required)</li>
+            <li>A hair tie if you have long hair</li>
+            <li>Reading glasses if you use them</li>
+            <li><span class="placeholder">[ANYTHING ELSE TBD]</span></li>
           </ul>
 
           <div class="note">
-            <strong>Good to know:</strong> <span class="placeholder">[SPECIAL NOTES TBD &mdash; e.g. wear
-            closed-toe shoes, arrive 10 minutes early, ages 16+]</span>
-          </div>
-
-          <div class="cta-row">
-            <a href="#reserve" class="btn">Sign Up Now</a>
-            <a href="Images/flyer.jpg" target="_blank" rel="noopener" class="flyer-link">View the flyer &rarr;</a>
+            <strong>Good to know:</strong> No experience necessary and all materials are provided.
+            Please arrive about 10 minutes early so we can start on time.
+            <span class="placeholder">[AGE MINIMUM / OTHER NOTES TBD &mdash; e.g. ages 16+]</span>
           </div>
         </div>
       </div>
@@ -88,7 +155,7 @@
       <h2>Reserve your spot</h2>
       <p>
         Fill this out and Sarah will email you to confirm your seat and send a link to pay your
-        deposit. Spots are limited to four, so reserve early!
+        deposit. Spots are limited, so reserve early!
       </p>
 
       <form id="reserve-form" class="signup">
@@ -96,8 +163,12 @@
         <input type="hidden" name="access_key" value="7c79ef98-6a4b-4696-a94f-9fb109ec653f">
         <input type="hidden" name="subject" value="Workshop reservation — Copper-Foil Beginner">
         <input type="hidden" name="from_name" value="Flux + Thread website">
-        <!-- Identifies which workshop. When you copy this page for a new workshop, change this line. -->
-        <input type="hidden" name="workshop" value="Copper-Foil Beginner Workshop — [DATE TBD]">
+        <!-- Which workshop. When you copy this page for a new workshop, change this line. -->
+        <input type="hidden" name="workshop" value="Copper-Foil Beginner Workshop">
+        <!-- Receives the chosen session from the booking-box dropdown (#session-select).
+             This default MUST match the FIRST <option> in #session-select so the form still
+             submits a sensible date if JavaScript is unavailable. -->
+        <input type="hidden" name="session" id="session-field" value="[SESSION 1 — DATE TBD]">
         <!-- honeypot (hidden from people, catches bots) -->
         <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
 
@@ -154,6 +225,7 @@
 </footer>
 
 <script>
+// ---- Reservation form: submit to Web3Forms, show confirmation ----
 (function () {
   var form = document.getElementById('reserve-form');
   if (!form) return;
@@ -193,6 +265,34 @@
       })
       .catch(function () { setStatus('Network hiccup — please try again in a moment.', 'err'); });
   });
+})();
+
+// ---- Photo gallery: click a thumbnail to swap the main image ----
+(function () {
+  var mainImg = document.getElementById('gallery-main-img');
+  var thumbs = document.querySelectorAll('.thumb');
+  if (!mainImg || !thumbs.length) return;
+  thumbs.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      mainImg.src = btn.getAttribute('data-full');
+      mainImg.alt = btn.getAttribute('data-alt') || '';
+      thumbs.forEach(function (b) { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
+    });
+  });
+})();
+
+// ---- Date picker: copy the chosen session into the form's hidden field ----
+(function () {
+  var sel = document.getElementById('session-select');
+  var field = document.getElementById('session-field');
+  if (!sel || !field) return;
+  function sync() { field.value = sel.value; }
+  sync(); // align on load (in case the browser restored a selection)
+  sel.addEventListener('change', sync);
+  var form = document.getElementById('reserve-form');
+  if (form) form.addEventListener('submit', sync); // defensive: sync again at submit
 })();
 </script>
 
