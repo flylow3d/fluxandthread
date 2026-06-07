@@ -2,22 +2,26 @@
 <html lang="en">
 <!--
   Choose Your Glass — guests pick one glass sheet per part of their project.
-  PER WORKSHOP: this page is for the Copper-Foil Beginner workshop. A different workshop has a
-  different pattern (different parts), so copy this file to choose-glass-<slug>.html and edit the
-  <legend> names, the name="glass_for_*" keys, the hidden subject/workshop fields, the back-link,
-  and the session <option>s. (.gitignore already whitelists choose-glass*.html.)
 
-  REAL PHOTOS LATER: each swatch ships as a colour placeholder tile. To use a real photo, replace
-      <span class="sw-tile" style="--sw:#xxxxxx" aria-hidden="true"></span>
-  with
-      <img class="sw-tile" src="Images/glass/no-12-lavender-wispy.jpg" alt="">
-  (put photos in Images/glass/ — that folder needs no .gitignore change.)
+  HOW TO ADD / EDIT / REMOVE A GLASS SHEET:
+  The swatches are generated from the GLASS list in the <script> at the bottom of this file
+  (one entry per sheet, shown automatically under every pattern part). To add a sheet:
+    1. Put the photo in Images/glass/ (web-safe name, e.g. butter-yellow.jpeg).
+    2. Add one line to GLASS:  { name: "Butter Yellow", file: "butter-yellow.jpeg" }
+       For a one-of-a-kind sheet add `, ooak: true` — it gets a badge + "(one of a kind)" in
+       Sarah's email. Default (no ooak) = restockable.
+  No other edits needed — it appears under all three parts.
+
+  PER WORKSHOP: this page is for the Copper-Foil Beginner workshop. A different workshop has a
+  different pattern (different parts) → copy this file to choose-glass-<slug>.html and edit the
+  <legend> names, the data-part keys, the hidden subject/workshop fields, the back-link, and the
+  session <option>s. (.gitignore already whitelists choose-glass*.html.)
 -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Choose Your Glass — Flux + Thread</title>
-<meta name="description" content="Workshop guests: pick the exact sheet of glass for each part of your project before class day. Many sheets are one-of-a-kind — reserved for you.">
+<meta name="description" content="Workshop guests: pick the exact sheet of glass for each part of your project before class day — reserved just for you.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -52,9 +56,6 @@
         Your piece is made of a few parts &mdash; and you get to choose the exact sheet of glass for
         each one. Pick a sheet for every part below, and Sarah will set those exact pieces aside for
         your class &mdash; <strong>the glass you choose is reserved just for you.</strong>
-      </p>
-      <p class="section-sub">
-        <span class="placeholder">[PHOTOS TBD &mdash; a few swatches below are still colour stand-ins until Sarah photographs the rest of her sheets]</span>
       </p>
     </div>
   </section>
@@ -103,55 +104,23 @@
           </div>
         </div>
 
-        <!-- ===== PATTERN PART 1 ===== -->
+        <!-- ===== PATTERN PARTS — swatch grids are filled by the GLASS list in the script below ===== -->
         <fieldset class="glass-part" data-part="body">
           <legend><span class="part-n">Part 1</span> Body <span class="placeholder">[PART NAME TBD]</span></legend>
           <p class="part-hint">The main shape of your piece &mdash; pick the sheet it&rsquo;s cut from.</p>
-          <div class="swatch-grid">
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Pale Lilac Gray"><span class="sw-inner"><img class="sw-tile" src="Images/glass/pale-lilac-gray.png" alt=""><span class="sw-cap"><span class="sw-name">Pale Lilac Gray</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Lime Green Streaky"><span class="sw-inner"><img class="sw-tile" src="Images/glass/lime-green-streaky.png" alt=""><span class="sw-cap"><span class="sw-name">Lime Green Streaky</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Dark Yellow Streaky"><span class="sw-inner"><img class="sw-tile" src="Images/glass/dark-yellow-streaky.png" alt=""><span class="sw-cap"><span class="sw-name">Dark Yellow Streaky</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Blue Waves"><span class="sw-inner"><img class="sw-tile" src="Images/glass/blue-waves.png" alt=""><span class="sw-cap"><span class="sw-name">Blue Waves</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Translucent Cherry Red (one of a kind)"><span class="sw-inner"><img class="sw-tile" src="Images/glass/translucent-cherry-red.png" alt=""><span class="sw-cap"><span class="sw-name">Translucent Cherry Red</span><span class="sw-ooak">One of a kind</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="No. 18 — Deep Violet"><span class="sw-inner"><span class="sw-tile" style="--sw:#6f4f9c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Deep Violet</span><span class="sw-no">No. 18</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Light Blue Swirl"><span class="sw-inner"><img class="sw-tile" src="Images/glass/light-blue-swirl.png" alt=""><span class="sw-cap"><span class="sw-name">Light Blue Swirl</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Peachy Red Smoothie"><span class="sw-inner"><img class="sw-tile" src="Images/glass/peachy-red-smoothie.png" alt=""><span class="sw-cap"><span class="sw-name">Peachy Red Smoothie</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_body" value="Grey and White Wispy"><span class="sw-inner"><img class="sw-tile" src="Images/glass/grey-and-white-wispy.png" alt=""><span class="sw-cap"><span class="sw-name">Grey and White Wispy</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-          </div>
+          <div class="swatch-grid"></div>
         </fieldset>
 
-        <!-- ===== PATTERN PART 2 ===== -->
         <fieldset class="glass-part" data-part="accent">
           <legend><span class="part-n">Part 2</span> Accent <span class="placeholder">[PART NAME TBD]</span></legend>
           <p class="part-hint">The smaller accent pieces &mdash; choose a sheet that pops against your body colour.</p>
-          <div class="swatch-grid">
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Pale Lilac Gray"><span class="sw-inner"><img class="sw-tile" src="Images/glass/pale-lilac-gray.png" alt=""><span class="sw-cap"><span class="sw-name">Pale Lilac Gray</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Lime Green Streaky"><span class="sw-inner"><img class="sw-tile" src="Images/glass/lime-green-streaky.png" alt=""><span class="sw-cap"><span class="sw-name">Lime Green Streaky</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Dark Yellow Streaky"><span class="sw-inner"><img class="sw-tile" src="Images/glass/dark-yellow-streaky.png" alt=""><span class="sw-cap"><span class="sw-name">Dark Yellow Streaky</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Blue Waves"><span class="sw-inner"><img class="sw-tile" src="Images/glass/blue-waves.png" alt=""><span class="sw-cap"><span class="sw-name">Blue Waves</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Translucent Cherry Red (one of a kind)"><span class="sw-inner"><img class="sw-tile" src="Images/glass/translucent-cherry-red.png" alt=""><span class="sw-cap"><span class="sw-name">Translucent Cherry Red</span><span class="sw-ooak">One of a kind</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="No. 18 — Deep Violet"><span class="sw-inner"><span class="sw-tile" style="--sw:#6f4f9c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Deep Violet</span><span class="sw-no">No. 18</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Light Blue Swirl"><span class="sw-inner"><img class="sw-tile" src="Images/glass/light-blue-swirl.png" alt=""><span class="sw-cap"><span class="sw-name">Light Blue Swirl</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Peachy Red Smoothie"><span class="sw-inner"><img class="sw-tile" src="Images/glass/peachy-red-smoothie.png" alt=""><span class="sw-cap"><span class="sw-name">Peachy Red Smoothie</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_accent" value="Grey and White Wispy"><span class="sw-inner"><img class="sw-tile" src="Images/glass/grey-and-white-wispy.png" alt=""><span class="sw-cap"><span class="sw-name">Grey and White Wispy</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-          </div>
+          <div class="swatch-grid"></div>
         </fieldset>
 
-        <!-- ===== PATTERN PART 3 ===== -->
         <fieldset class="glass-part" data-part="background">
           <legend><span class="part-n">Part 3</span> Background <span class="placeholder">[PART NAME TBD]</span></legend>
           <p class="part-hint">The surrounding pieces that frame your design.</p>
-          <div class="swatch-grid">
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Pale Lilac Gray"><span class="sw-inner"><img class="sw-tile" src="Images/glass/pale-lilac-gray.png" alt=""><span class="sw-cap"><span class="sw-name">Pale Lilac Gray</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Lime Green Streaky"><span class="sw-inner"><img class="sw-tile" src="Images/glass/lime-green-streaky.png" alt=""><span class="sw-cap"><span class="sw-name">Lime Green Streaky</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Dark Yellow Streaky"><span class="sw-inner"><img class="sw-tile" src="Images/glass/dark-yellow-streaky.png" alt=""><span class="sw-cap"><span class="sw-name">Dark Yellow Streaky</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Blue Waves"><span class="sw-inner"><img class="sw-tile" src="Images/glass/blue-waves.png" alt=""><span class="sw-cap"><span class="sw-name">Blue Waves</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Translucent Cherry Red (one of a kind)"><span class="sw-inner"><img class="sw-tile" src="Images/glass/translucent-cherry-red.png" alt=""><span class="sw-cap"><span class="sw-name">Translucent Cherry Red</span><span class="sw-ooak">One of a kind</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="No. 18 — Deep Violet"><span class="sw-inner"><span class="sw-tile" style="--sw:#6f4f9c" aria-hidden="true"></span><span class="sw-cap"><span class="sw-name">Deep Violet</span><span class="sw-no">No. 18</span><span class="sw-flag placeholder" aria-hidden="true">[photo TBD]</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Light Blue Swirl"><span class="sw-inner"><img class="sw-tile" src="Images/glass/light-blue-swirl.png" alt=""><span class="sw-cap"><span class="sw-name">Light Blue Swirl</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Peachy Red Smoothie"><span class="sw-inner"><img class="sw-tile" src="Images/glass/peachy-red-smoothie.png" alt=""><span class="sw-cap"><span class="sw-name">Peachy Red Smoothie</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-            <label class="swatch"><input type="radio" name="glass_for_background" value="Grey and White Wispy"><span class="sw-inner"><img class="sw-tile" src="Images/glass/grey-and-white-wispy.png" alt=""><span class="sw-cap"><span class="sw-name">Grey and White Wispy</span></span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>
-          </div>
+          <div class="swatch-grid"></div>
         </fieldset>
 
         <button type="submit" class="btn glass-submit">Reserve My Glass</button>
@@ -195,6 +164,56 @@
 </footer>
 
 <script>
+// ====== THE GLASS LIST — add/edit/remove sheets here (appears under every part) ======
+// { name: "<shown name>", file: "<file in Images/glass/>", ooak: true (optional, one-of-a-kind) }
+var GLASS = [
+  { name: "Pale Lilac Gray",          file: "pale-lilac-gray.png" },
+  { name: "Lime Green Streaky",       file: "lime-green-streaky.png" },
+  { name: "Dark Yellow Streaky",      file: "dark-yellow-streaky.png" },
+  { name: "Butter Yellow",            file: "butter-yellow.jpeg" },
+  { name: "Peachy Red Smoothie",      file: "peachy-red-smoothie.png" },
+  { name: "Opaque Bright Red",        file: "opaque-bright-red.jpeg" },
+  { name: "Translucent Cherry Red",   file: "translucent-cherry-red.png", ooak: true },
+  { name: "Earthy Swirl",             file: "earthy-swirl.jpeg" },
+  { name: "Green Brown Swirl",        file: "green-brown-swirl.jpeg" },
+  { name: "Green Blue Swirl",         file: "green-blue-swirl.jpeg" },
+  { name: "Opaque Seafoam Blue",      file: "opaque-seafoam-blue.jpeg" },
+  { name: "Translucent Teal Swirl",   file: "translucent-teal-swirl.jpeg" },
+  { name: "Blue Waves",               file: "blue-waves.png" },
+  { name: "Light Blue Swirl",         file: "light-blue-swirl.png" },
+  { name: "Translucent Sky Blue",     file: "translucent-sky-blue.jpeg" },
+  { name: "Translucent Bright Blue",  file: "translucent-bright-blue.jpeg" },
+  { name: "Rippled Translucent Blue", file: "rippled-translucent-blue.jpeg" },
+  { name: "Holographic Blue",         file: "holographic-blue.jpeg" },
+  { name: "Clear Waters",             file: "clear-waters.jpeg" },
+  { name: "Clear White Wispy",        file: "clear-white-wispy.jpeg" },
+  { name: "Grey and White Wispy",     file: "grey-and-white-wispy.png" },
+  { name: "Translucent Dark Gray",    file: "translucent-dark-gray.jpeg" }
+];
+
+// Build the swatches into every part's grid from the GLASS list.
+(function () {
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  var grids = document.querySelectorAll('.glass-part');
+  for (var p = 0; p < grids.length; p++) {
+    var fs = grids[p];
+    var part = fs.getAttribute('data-part');
+    var grid = fs.querySelector('.swatch-grid');
+    var html = '';
+    for (var i = 0; i < GLASS.length; i++) {
+      var g = GLASS[i];
+      var val = esc(g.ooak ? g.name + ' (one of a kind)' : g.name);
+      html += '<label class="swatch"><input type="radio" name="glass_for_' + part + '" value="' + val + '">'
+        + '<span class="sw-inner"><img class="sw-tile" src="Images/glass/' + encodeURI(g.file) + '" alt="" loading="lazy">'
+        + '<span class="sw-cap"><span class="sw-name">' + esc(g.name) + '</span>'
+        + (g.ooak ? '<span class="sw-ooak">One of a kind</span>' : '')
+        + '</span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>';
+    }
+    grid.innerHTML = html;
+  }
+})();
+
+// ====== Form behaviour: surprise toggle, completeness nudge, submit + confirm ======
 (function () {
   var form = document.getElementById('glass-form');
   if (!form) return;

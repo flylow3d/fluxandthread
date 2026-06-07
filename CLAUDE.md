@@ -69,17 +69,20 @@ supplies → community + new-mom closing). Nav "About" on every page now points 
 `#about` section is intentionally left unchanged. The homepage **glass bar** was recolored to
 lavender→deep-purple→lavender (brand-only, was multi-color).
 
-**"Choose Your Glass" page added** (2026-06-06). **`choose-glass.html`** lets a guest pick the exact
-glass **sheet for each part** of their project before class. One `<fieldset>` per pattern part
-(`name="glass_for_<part>"`); each glass sheet is a **native radio styled as a photo swatch** (the
-`.timing` hidden-radio technique) — single-select per part, "Reserved for you" state is pure CSS, no
-selection JS. Picks email Sarah via Web3Forms (one `glass_for_<part>: No. NN — Name` line each); a
-~12-line submit nudge blocks partial picks. Framed as choosing a *specific, named, numbered,
-one-of-a-kind sheet*. Linked from the workshop booking box ("Choose Your Glass →") + the reservation
-confirmation ("Next: choose your glass →"); not in nav. Whitelisted via `!/choose-glass*.html`.
-Future workshops copy → `choose-glass-<slug>.html`. Currently **placeholder swatches** = colored
-tiles (`--sw` hex) with `[photo TBD]`; real photos go in **`Images/glass/`** as a one-line `<img>`
-swap.
+**"Choose Your Glass" page added** (2026-06-06; refactored data-driven 2026-06-07).
+**`choose-glass.html`** lets a guest pick the exact glass **sheet for each part** of their project
+before class. One `<fieldset>` per pattern part (`data-part` → `name="glass_for_<part>"`); each glass
+sheet is a **native radio styled as a photo swatch** — single-select per part, "Reserved for you"
+state is pure CSS, no selection JS. Picks email Sarah via Web3Forms (one `glass_for_<part>: <name>`
+line each); a ~12-line submit nudge blocks partial picks. A **"Surprise me"** button lets a guest opt
+out (hides the grids, emails `glass_selection: ✨ SURPRISE ME …`, skips the nudge — Sarah hand-picks).
+**Swatches are generated from a `GLASS = [...]` array in the page's inline `<script>`** (each entry
+`{name, file, ooak?}`) — defined ONCE, rendered under all parts. **To add/edit a sheet: drop the
+photo in `Images/glass/` and add/edit one line in `GLASS`** (`ooak: true` for one-of-a-kind → badge +
+"(one of a kind)" in the email). Now showing **22 real sheets** (all placeholders replaced). Sheets
+are **name-only** (no numbers; `.sw-no` is `display:none`) and default to **restockable** (see
+[[glass-restockable-default]]). Linked from the workshop booking box + reservation confirmation; not
+in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
 **Open items / next steps:**
 - **Fill in the workshop placeholders** in `workshop-copper-foil-beginner.html` (+ the listing card
