@@ -150,3 +150,33 @@
   `fluxandthread.com` (detail-page booking box/gallery, About page + `sarah.jpg` all HTTP 200).
 - Sarah's verdict: "it's perfect." Workshop-detail PENDING items from Session 7 still stand
   (real price/dates/spots/photos/Square link).
+
+### Session 9 (2026-06-07)
+- **Built the "Choose Your Glass" page** (`choose-glass.html`) so guests pick a glass **sheet for
+  each part** of their project before class. Planned via Explore + Plan agents; Sarah's choices:
+  dedicated page, **one sheet per pattern part**, she'd photograph her real sheets later. Each part
+  is a `<fieldset>` (`name="glass_for_<part>"`); each sheet is a **native radio styled as a photo
+  swatch** (single-select, "Reserved for you" pure-CSS state, no selection JS). Picks email Sarah
+  via Web3Forms; a submit nudge blocks partial picks. Linked from the workshop booking box +
+  reservation confirmation; whitelisted `!/choose-glass*.html`; new CSS block + `Images/glass/`
+  photo folder. Shipped with colored placeholder swatches.
+- **Added a "Surprise me" option:** a guest can opt out of choosing — the grids hide, a friendly
+  note shows, the nudge is skipped, and the email flags `glass_selection: ✨ SURPRISE ME` (no
+  per-part picks); "Actually, I'll pick my own" returns to the picker. Native-radio + CSS, ~1 small
+  IIFE addition; the surprise button kept as a secondary outline (overriding `.signup .btn`).
+- **Replaced placeholders with real glass photos** as Sarah sent them, in batches: first
+  Dark Yellow + Lime Green Streaky, then Blue Waves / Light Blue Swirl / (Lilac Love→renamed
+  **Pale Lilac Gray**), then a one-of-a-kind **Translucent Cherry Red** (+ Peachy Red Smoothie,
+  Grey and White Wispy). Decisions: **name-only, no numbers** (`.sw-no { display:none }`); sheets
+  **default to restockable** unless flagged (saved as memory [[glass-restockable-default]]);
+  softened the page's one-of-a-kind/"when it's gone it's gone" copy to plain "reserved for you".
+  Added a `.sw-ooak` "One of a kind" badge. All photos go in `Images/glass/` (web-safe slugs).
+- **Refactored the picker to data-driven** when the catalog jumped to 22 sheets (a 14-photo batch):
+  swatches are now generated from a single **`GLASS = [{name, file, ooak?}]`** array in the page's
+  inline script (defined once, rendered under all 3 parts) instead of 3×-duplicated static HTML.
+  **Adding a sheet is now one array line.** Dropped the last placeholder (Deep Violet) — picker is
+  100% real glass. Then added **Opaque Bright Blue** (23 total) and flagged **12 sheets
+  one-of-a-kind** per Sarah's list.
+- Every change verified with headless Edge and **published**; all live on `fluxandthread.com`.
+  PENDING still: real workshop price/dates/location/spots/Square link; a few sheets (Pale Lilac
+  Gray, clears) read pale — optional reshoots.

@@ -79,9 +79,9 @@ out (hides the grids, emails `glass_selection: ✨ SURPRISE ME …`, skips the n
 **Swatches are generated from a `GLASS = [...]` array in the page's inline `<script>`** (each entry
 `{name, file, ooak?}`) — defined ONCE, rendered under all parts. **To add/edit a sheet: drop the
 photo in `Images/glass/` and add/edit one line in `GLASS`** (`ooak: true` for one-of-a-kind → badge +
-"(one of a kind)" in the email). Now showing **22 real sheets** (all placeholders replaced). Sheets
-are **name-only** (no numbers; `.sw-no` is `display:none`) and default to **restockable** (see
-[[glass-restockable-default]]). Linked from the workshop booking box + reservation confirmation; not
+"(one of a kind)" in the email). Now showing **23 real sheets** (all placeholders replaced; 12
+flagged one-of-a-kind). Sheets are **name-only** (no numbers; `.sw-no` is `display:none`) and
+default to **restockable** unless flagged (see [[glass-restockable-default]]). Linked from the workshop booking box + reservation confirmation; not
 in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
 **Open items / next steps:**
