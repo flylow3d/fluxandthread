@@ -345,7 +345,11 @@ section { padding: 72px 0; }
 .spots-badge {
   display: inline-block; background: var(--lav-soft); color: var(--lav-dk); border: 1px solid var(--lav);
   border-radius: 999px; padding: 5px 14px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+}
+.booking-note {
+  font-family: 'Lora', Georgia, serif; font-size: 0.9rem; color: var(--body);
+  line-height: 1.5; margin: 0 0 16px;
 }
 
 /* structured description block (full width, below the hero) */

@@ -96,6 +96,9 @@
 
           <div class="spots-badge">4 spots left</div>
 
+          <p class="booking-note">Click <strong>Reserve a Spot</strong> below and Sarah will email you
+          to confirm your seat and send a link to pay your deposit. Spots are limited, so reserve early!</p>
+
           <a href="#reserve" class="btn booking-reserve">Reserve a Spot</a>
           <a href="choose-glass.html" class="btn btn-ghost booking-choose">Choose Your Glass &rarr;</a>
 
@@ -151,14 +154,10 @@
   </section>
 
   <!-- ============ RESERVATION FORM ============ -->
+  <!-- (Heading + intro moved into the booking box as .booking-note; the booking-box
+       "Reserve a Spot" button scrolls here to these fields.) -->
   <section id="reserve" class="band">
     <div class="container">
-      <h2>Reserve your spot</h2>
-      <p>
-        Fill this out and Sarah will email you to confirm your seat and send a link to pay your
-        deposit. Spots are limited, so reserve early!
-      </p>
-
       <form id="reserve-form" class="signup">
         <!-- Web3Forms: free form-to-email. -->
         <input type="hidden" name="access_key" value="7c79ef98-6a4b-4696-a94f-9fb109ec653f">
