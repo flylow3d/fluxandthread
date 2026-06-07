@@ -391,6 +391,17 @@ section { padding: 72px 0; }
 .glass-form .booking-label { display: block; margin: 6px 0 8px; }
 .glass-guest { max-width: 520px; margin: 0 auto 30px; }
 
+.glass-pattern {
+  margin: 0 auto 30px; max-width: 360px; text-align: center;
+}
+.glass-pattern img {
+  display: block; width: 100%; height: auto; border: 1px solid var(--rule);
+  border-radius: 4px; background: #fff; padding: 14px; box-sizing: border-box;
+}
+.glass-pattern figcaption {
+  margin-top: 10px; color: var(--muted); font-size: 0.95rem; font-style: italic;
+}
+
 .glass-part {
   border: 1px solid var(--rule); border-top: 4px solid var(--lav); border-radius: 4px;
   background: var(--bg-soft); padding: 22px 22px 8px; margin: 0 0 26px; min-width: 0;
@@ -453,6 +464,7 @@ img.sw-tile { object-fit: cover; }
 .glass-form.surprise-on .surprise-note { display: block; }
 .glass-form.surprise-on .glass-mode-prompt { display: none; }
 .glass-form.surprise-on .glass-part { display: none; }
+.glass-form.surprise-on .glass-pattern { display: none; }
 
 .linklike { background: none; border: none; padding: 0; cursor: pointer;
   font-family: 'Lora', Georgia, serif; font-size: 0.95rem; font-weight: 600; color: var(--lav-dk);

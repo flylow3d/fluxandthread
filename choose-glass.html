@@ -10,7 +10,7 @@
     2. Add one line to GLASS:  { name: "Butter Yellow", file: "butter-yellow.jpeg" }
        For a one-of-a-kind sheet add `, ooak: true` — it gets a badge + "(one of a kind)" in
        Sarah's email. Default (no ooak) = restockable.
-  No other edits needed — it appears under all three parts.
+  No other edits needed — it appears under every pattern piece.
 
   PER WORKSHOP: this page is for the Simple Suncatcher workshop. A different workshop has a
   different pattern (different parts) → copy this file to choose-glass-<slug>.html and edit the
@@ -53,9 +53,10 @@
       <p class="back-link"><a href="workshop-simple-suncatcher.html">&larr; Back to the workshop</a></p>
       <div class="section-rule"><h2>Choose Your Glass</h2></div>
       <p class="section-sub">
-        Your piece is made of a few parts &mdash; and you get to choose the exact sheet of glass for
-        each one. Pick a sheet for every part below, and Sarah will set those exact pieces aside for
-        your class &mdash; <strong>the glass you choose is reserved just for you.</strong>
+        Your Simple Suncatcher is made of <strong>five pieces of glass</strong> &mdash; and you get to
+        choose the exact sheet for each one. Use the numbered pattern below to pick a sheet for every
+        piece, and Sarah will set those exact pieces aside for your class &mdash;
+        <strong>the glass you choose is reserved just for you.</strong>
       </p>
     </div>
   </section>
@@ -104,22 +105,40 @@
           </div>
         </div>
 
-        <!-- ===== PATTERN PARTS — swatch grids are filled by the GLASS list in the script below ===== -->
-        <fieldset class="glass-part" data-part="body">
-          <legend><span class="part-n">Part 1</span> Body <span class="placeholder">[PART NAME TBD]</span></legend>
-          <p class="part-hint">The main shape of your piece &mdash; pick the sheet it&rsquo;s cut from.</p>
+        <!-- Pattern map: guests match each numbered piece below to this diagram. -->
+        <figure class="glass-pattern">
+          <img src="Images/simple-suncatcher-pattern.png" alt="Simple Suncatcher pattern: a square pinwheel of five numbered pieces — 1 across the top, 2 down the right, 3 across the bottom, 4 down the left, and 5 a small square in the center">
+          <figcaption>Your pattern &mdash; pick a glass sheet for each numbered piece below.</figcaption>
+        </figure>
+
+        <!-- ===== PATTERN PIECES — swatch grids are filled by the GLASS list in the script below ===== -->
+        <fieldset class="glass-part" data-part="1">
+          <legend><span class="part-n">Piece 1</span> Top bar</legend>
+          <p class="part-hint">The wide bar across the top of the pinwheel.</p>
           <div class="swatch-grid"></div>
         </fieldset>
 
-        <fieldset class="glass-part" data-part="accent">
-          <legend><span class="part-n">Part 2</span> Accent <span class="placeholder">[PART NAME TBD]</span></legend>
-          <p class="part-hint">The smaller accent pieces &mdash; choose a sheet that pops against your body colour.</p>
+        <fieldset class="glass-part" data-part="2">
+          <legend><span class="part-n">Piece 2</span> Right column</legend>
+          <p class="part-hint">The tall piece down the right-hand side.</p>
           <div class="swatch-grid"></div>
         </fieldset>
 
-        <fieldset class="glass-part" data-part="background">
-          <legend><span class="part-n">Part 3</span> Background <span class="placeholder">[PART NAME TBD]</span></legend>
-          <p class="part-hint">The surrounding pieces that frame your design.</p>
+        <fieldset class="glass-part" data-part="3">
+          <legend><span class="part-n">Piece 3</span> Bottom bar</legend>
+          <p class="part-hint">The wide bar across the bottom of the pinwheel.</p>
+          <div class="swatch-grid"></div>
+        </fieldset>
+
+        <fieldset class="glass-part" data-part="4">
+          <legend><span class="part-n">Piece 4</span> Left column</legend>
+          <p class="part-hint">The tall piece down the left-hand side.</p>
+          <div class="swatch-grid"></div>
+        </fieldset>
+
+        <fieldset class="glass-part" data-part="5">
+          <legend><span class="part-n">Piece 5</span> Center square</legend>
+          <p class="part-hint">The small square right in the middle.</p>
           <div class="swatch-grid"></div>
         </fieldset>
 

@@ -73,9 +73,12 @@ supplies → community + new-mom closing). Nav "About" on every page now points 
 lavender→deep-purple→lavender (brand-only, was multi-color).
 
 **"Choose Your Glass" page added** (2026-06-06; refactored data-driven 2026-06-07).
-**`choose-glass.html`** lets a guest pick the exact glass **sheet for each part** of their project
-before class. One `<fieldset>` per pattern part (`data-part` → `name="glass_for_<part>"`); each glass
-sheet is a **native radio styled as a photo swatch** — single-select per part, "Reserved for you"
+**`choose-glass.html`** lets a guest pick the exact glass **sheet for each piece** of their project
+before class. Wired to the **real Simple Suncatcher pattern** (2026-06-07): the page shows the labeled
+pattern diagram (`Images/simple-suncatcher-pattern.png`, a 5-piece pinwheel) and has one `<fieldset>`
+per numbered piece — `data-part="1".."5"` → `name="glass_for_1".."glass_for_5"`, legends "Piece 1 ·
+Top bar" … "Piece 5 · Center square". Each glass
+sheet is a **native radio styled as a photo swatch** — single-select per piece, "Reserved for you"
 state is pure CSS, no selection JS. Picks email Sarah via Web3Forms (one `glass_for_<part>: <name>`
 line each); a ~12-line submit nudge blocks partial picks. A **"Surprise me"** button lets a guest opt
 out (hides the grids, emails `glass_selection: ✨ SURPRISE ME …`, skips the nudge — Sarah hand-picks).
