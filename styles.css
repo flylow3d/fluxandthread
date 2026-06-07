@@ -377,7 +377,8 @@ section { padding: 72px 0; }
 
 .booking-choose { width: 100%; text-align: center; margin: -8px 0 18px; }
 
-.glass-intro { background: var(--bg); }
+.glass-intro { background: var(--bg); padding-bottom: 0; }
+.glass-picker { padding-top: 0; }
 .glass-intro .section-sub { max-width: 640px; }
 .glass-intro .back-link { text-align: left; }
 
