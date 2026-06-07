@@ -71,6 +71,8 @@
         <input type="hidden" name="from_name" value="Flux + Thread website">
         <!-- Which workshop. Change this line when you copy the page for a new workshop. -->
         <input type="hidden" name="workshop" value="Copper-Foil Beginner Workshop">
+        <!-- Set by the "Surprise me" button (JS); tells Sarah whether the guest chose or wants a surprise. -->
+        <input type="hidden" name="glass_selection" id="glass-selection" value="Picking their own glass (see choices below)">
         <!-- honeypot (hidden from people, catches bots) -->
         <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
 
@@ -87,6 +89,20 @@
             <option value="[SESSION 2 — DATE TBD]">[Session 2 &mdash; date TBD]</option>
             <option value="[SESSION 3 — DATE TBD]">[Session 3 &mdash; date TBD]</option>
           </select>
+        </div>
+
+        <!-- ===== CHOOSE-OR-SURPRISE ===== -->
+        <div class="glass-mode">
+          <div class="glass-mode-prompt">
+            <div class="mode-or"><span>pick your glass below &mdash; or</span></div>
+            <button type="button" id="surprise-btn" class="btn btn-ghost">Surprise me &#10024;</button>
+            <p class="mode-hint">Prefer not to choose? Let Sarah hand-pick the perfect glass for your piece.</p>
+          </div>
+          <div class="surprise-note" role="status">
+            <p><strong>Wonderful &mdash; it&rsquo;s a surprise! &#10024;</strong> Sarah will hand-pick glass that
+            suits your piece and set it aside for your class. Just add your details above and reserve your spot.</p>
+            <button type="button" id="pick-own-btn" class="linklike">Actually, I&rsquo;ll pick my own &rarr;</button>
+          </div>
         </div>
 
         <!-- ===== PATTERN PART 1 ===== -->
@@ -151,11 +167,15 @@
     <div class="container">
       <div id="glass-confirm" class="reserve-confirm" hidden>
         <h3>Your glass is reserved &mdash; thank you!</h3>
-        <p>
+        <p class="confirm-pick">
           Sarah will set aside the exact sheets you chose for your class. Because much of her glass is
           one-of-a-kind inherited stock, your pieces are now held with your name on them. If anything
           you picked turns out to be unavailable, she&rsquo;ll email you a close alternative before
           class day.
+        </p>
+        <p class="confirm-surprise" hidden>
+          Sarah will hand-pick glass that suits your piece and set it aside for your class &mdash; a
+          little surprise to look forward to. She&rsquo;ll have everything ready for you on the day.
         </p>
         <p class="fineprint">Questions? Email <a href="mailto:hello@fluxandthread.com">hello@fluxandthread.com</a>.</p>
       </div>
@@ -183,9 +203,33 @@
   if (!form) return;
   var statusEl = document.getElementById('glass-status');
   var confirmEl = document.getElementById('glass-confirm');
+  var submitBtn = form.querySelector('.glass-submit');
+  var modeField = document.getElementById('glass-selection');
   function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'signup-status show ' + (kind || ''); }
 
+  // ---- Surprise me: let Sarah hand-pick instead of choosing ----
+  var PICK_MSG = 'Picking their own glass (see choices below)';
+  var SURPRISE_MSG = '✨ SURPRISE ME — please pick glass for this guest';
+  function setSurprise(on) {
+    form.classList.toggle('surprise-on', on);
+    if (modeField) modeField.value = on ? SURPRISE_MSG : PICK_MSG;
+    if (submitBtn) submitBtn.textContent = on ? 'Reserve My Surprise ✨' : 'Reserve My Glass';
+    if (on) {  // clear any picks so they don't email alongside the surprise flag
+      form.querySelectorAll('.glass-part input[type="radio"]:checked').forEach(function (r) { r.checked = false; });
+    }
+    setStatus('', '');
+  }
+  var surpriseBtn = document.getElementById('surprise-btn');
+  var pickOwnBtn = document.getElementById('pick-own-btn');
+  if (surpriseBtn) surpriseBtn.addEventListener('click', function () { setSurprise(true); });
+  if (pickOwnBtn) pickOwnBtn.addEventListener('click', function () { setSurprise(false); });
+
   function showConfirm() {
+    var surprise = form.classList.contains('surprise-on');
+    var pickP = confirmEl.querySelector('.confirm-pick');
+    var surpriseP = confirmEl.querySelector('.confirm-surprise');
+    if (pickP) pickP.hidden = surprise;
+    if (surpriseP) surpriseP.hidden = !surprise;
     confirmEl.hidden = false;
     confirmEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -194,18 +238,21 @@
     e.preventDefault();
 
     // Nudge: every part needs a sheet, or Sarah can't cut the piece.
-    var parts = form.querySelectorAll('.glass-part');
-    var unchosen = [];
-    parts.forEach(function (fs) {
-      if (!fs.querySelector('input[type="radio"]:checked')) {
-        var lg = fs.querySelector('legend');
-        unchosen.push(lg ? lg.textContent.replace(/\[.*?\]/g, '').trim() : 'a part');
+    // (Skipped when the guest chose "Surprise me" — Sarah picks for them.)
+    if (!form.classList.contains('surprise-on')) {
+      var parts = form.querySelectorAll('.glass-part');
+      var unchosen = [];
+      parts.forEach(function (fs) {
+        if (!fs.querySelector('input[type="radio"]:checked')) {
+          var lg = fs.querySelector('legend');
+          unchosen.push(lg ? lg.textContent.replace(/\[.*?\]/g, '').trim() : 'a part');
+        }
+      });
+      if (unchosen.length) {
+        setStatus('Please pick a sheet for: ' + unchosen.join(', ') + '.', 'err');
+        parts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
       }
-    });
-    if (unchosen.length) {
-      setStatus('Please pick a sheet for: ' + unchosen.join(', ') + '.', 'err');
-      parts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
     }
 
     var key = form.elements['access_key'].value;

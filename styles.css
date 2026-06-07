@@ -433,6 +433,28 @@ img.sw-tile { object-fit: cover; }
 
 .glass-submit { width: auto; min-width: 220px; }
 
+/* choose-or-surprise */
+.glass-mode { text-align: center; margin: 2px 0 28px; }
+.mode-or { display: flex; align-items: center; gap: 16px; margin: 0 auto 16px; max-width: 460px; color: var(--muted); }
+.mode-or::before, .mode-or::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+.mode-or span { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 600; }
+.mode-hint { color: var(--muted); font-size: 0.92rem; margin: 12px auto 0; max-width: 420px; }
+/* keep the Surprise button a secondary outline (override the full-width .signup .btn) */
+.glass-mode .btn-ghost { width: auto; background: transparent; color: var(--lav-dk); border-color: var(--lav-dk); }
+.glass-mode .btn-ghost:hover { background: var(--lav-dk); color: #fff; border-color: var(--lav-dk); }
+
+.surprise-note { display: none; max-width: 520px; margin: 0 auto; text-align: center;
+  background: var(--lav-soft); border: 1px solid var(--lav); border-radius: 4px; padding: 22px 26px; }
+.surprise-note p { margin: 0 0 12px; color: var(--ink); }
+.glass-form.surprise-on .surprise-note { display: block; }
+.glass-form.surprise-on .glass-mode-prompt { display: none; }
+.glass-form.surprise-on .glass-part { display: none; }
+
+.linklike { background: none; border: none; padding: 0; cursor: pointer;
+  font-family: 'Lora', Georgia, serif; font-size: 0.95rem; font-weight: 600; color: var(--lav-dk);
+  border-bottom: 1px solid transparent; }
+.linklike:hover { border-bottom-color: var(--lav-dk); }
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 860px) {
