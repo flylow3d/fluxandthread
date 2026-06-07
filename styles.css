@@ -419,7 +419,8 @@ section { padding: 72px 0; }
 img.sw-tile { object-fit: cover; }
 .sw-cap { display: block; padding: 9px 11px 11px; }
 .sw-name { display: block; font-weight: 600; color: var(--ink); font-size: 0.98rem; line-height: 1.2; }
-.sw-no { display: block; margin-top: 2px; font-size: 0.78rem; letter-spacing: 0.04em; color: var(--muted); }
+/* sheets are shown by name only (Sarah's choice) — flip to `block` to bring numbers back */
+.sw-no { display: none; margin-top: 2px; font-size: 0.78rem; letter-spacing: 0.04em; color: var(--muted); }
 .sw-flag { display: inline-block; margin-top: 4px; font-size: 0.72rem; }
 .sw-check {
   display: none; padding: 6px 11px; font-size: 0.72rem; font-weight: 600;
