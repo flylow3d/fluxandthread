@@ -407,14 +407,17 @@ section { padding: 72px 0; }
   border: 1px solid var(--rule); border-top: 4px solid var(--lav); border-radius: 4px;
   background: var(--bg-soft); padding: 22px 22px 8px; margin: 0 0 26px; min-width: 0;
 }
-.glass-part legend {
-  font-family: 'Cormorant Garamond', Georgia, serif; color: var(--ink);
-  font-size: 1.5rem; font-style: italic; font-weight: 600; padding: 0 6px;
-}
+.glass-part legend { padding: 0 6px; }
+/* The number is the star — it maps to the labeled pattern (Piece 1 = "1" on the diagram). */
 .glass-part .part-n {
-  display: inline-block; margin-right: 8px; vertical-align: middle;
-  font-family: 'Lora', Georgia, serif; font-style: normal; text-transform: uppercase;
-  letter-spacing: 0.12em; font-size: 0.7rem; color: var(--lav-dk);
+  font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 600;
+  font-size: 1.9rem; line-height: 1.1; color: var(--lav-dk);
+  margin-right: 12px; vertical-align: baseline;
+}
+/* The position name steps back to a small secondary descriptor. */
+.glass-part .part-name {
+  font-family: 'Lora', Georgia, serif; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; font-size: 0.82rem; color: var(--muted); vertical-align: baseline;
 }
 .glass-part .part-hint { color: var(--muted); margin: 4px 0 16px; font-size: 0.95rem; }
 
