@@ -51,10 +51,13 @@ gathering interest + asking weekday-afternoon vs weekend preference. Do not inve
 
 **Workshops pages added** (2026-06-04). The nav "Workshop" link, the featured-workshop CTA, and
 the offerings "Workshops" card now open a dedicated **`workshops.html`** listing page, which links
-to a per-workshop detail page **`workshop-copper-foil-beginner.html`** (date/time/location/deposit
-+ special notes + a "Sign Up Now" reservation form). Future workshops follow the
-`workshop-<slug>.html` scheme (copy the detail page, edit content + the hidden `workshop`/`subject`
-form fields, add a card to `workshops.html`). New pages duplicate the header/footer inline (no
+to a per-workshop detail page (date/time/location/deposit + special notes + a "Sign Up Now"
+reservation form). **Workshops are organized by design, not technique** (Sarah's choice, 2026-06-07):
+the design name is the title/hook (e.g. **Simple Suncatcher**, later Blooming Flowers, Sweet Like
+Honeycomb) and the technique is a small `.smallcaps` sub-tag ("Beginner · Copper Foil"). The first
+workshop is **`workshop-simple-suncatcher.html`** (formerly `workshop-copper-foil-beginner.html`).
+Future workshops follow the `workshop-<design-slug>.html` scheme (copy the detail page, edit content
++ the hidden `workshop`/`subject` form fields, add a card to `workshops.html`). New pages duplicate the header/footer inline (no
 partials — GitHub Pages has no build step) and are whitelisted in `.gitignore` via `!/workshops.html`
 + `!/workshop-*.html`. **Booking model = "start simple, manual deposits"** (Sarah's choice): the
 reservation form emails her via Web3Forms (same access key), then she sends a **Square** deposit
@@ -85,7 +88,7 @@ default to **restockable** unless flagged (see [[glass-restockable-default]]). L
 in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
 **Open items / next steps:**
-- **Fill in the workshop placeholders** in `workshop-copper-foil-beginner.html` (+ the listing card
+- **Fill in the workshop placeholders** in `workshop-simple-suncatcher.html` (+ the listing card
   in `workshops.html`): real **price, deposit amount, session date(s), spots-left count, time,
   location, special notes / age minimum**, real **workshop photos** (gallery thumbs currently reuse
   inprocess-diamonds + gnome), and the **Square deposit link** (replace the `REPLACE-…` href
@@ -143,7 +146,7 @@ density per row/column; see session 2 in `SESSION_LOG.md`).
 Sarah_Stained Glass/
 ├── index.html              ← the landing page (real content)
 ├── workshops.html          ← Workshops listing page (nav "Workshop" → here)
-├── workshop-copper-foil-beginner.html  ← per-workshop detail + reservation form
+├── workshop-simple-suncatcher.html  ← per-workshop detail + reservation form (design-named; first workshop)
 ├── choose-glass.html       ← "Choose Your Glass": pick a sheet per pattern part (per workshop)
 ├── about.html              ← About page (nav "About" → here); Sarah's portrait + bio
 ├── styles.css              ← stained-glass aesthetic
