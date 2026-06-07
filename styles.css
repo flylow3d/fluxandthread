@@ -422,6 +422,9 @@ img.sw-tile { object-fit: cover; }
 /* sheets are shown by name only (Sarah's choice) — flip to `block` to bring numbers back */
 .sw-no { display: none; margin-top: 2px; font-size: 0.78rem; letter-spacing: 0.04em; color: var(--muted); }
 .sw-flag { display: inline-block; margin-top: 4px; font-size: 0.72rem; }
+.sw-ooak { display: inline-block; margin-top: 5px; padding: 2px 8px; border-radius: 999px;
+  background: var(--lav-soft); color: var(--lav-dk); font-size: 0.66rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em; }
 .sw-check {
   display: none; padding: 6px 11px; font-size: 0.72rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.1em; color: #1c1b22; background: var(--lav);
