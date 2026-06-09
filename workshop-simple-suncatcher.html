@@ -100,7 +100,7 @@
           to confirm your seat and send a link to pay your deposit. Spots are limited, so reserve early!</p>
 
           <a href="#reserve" class="btn booking-reserve">Reserve a Spot</a>
-          <a href="choose-glass.html" class="btn btn-ghost booking-choose">Choose Your Glass &rarr;</a>
+          <a href="choose-glass.html" class="btn btn-ghost booking-choose reserve-only">Choose Your Glass &rarr;</a>
 
           <ul class="booking-facts" role="list">
             <li><span class="label">Time</span> <span class="placeholder">[TIME TBD]</span></li>
@@ -205,16 +205,27 @@
 
       <!-- Shown after a successful submission -->
       <div id="reserve-confirm" class="reserve-confirm" hidden>
-        <h3>Request received &mdash; thank you!</h3>
-        <p>
-          Your spot is held while Sarah confirms. She&rsquo;ll email you shortly with the details and
-          a link to pay your <strong>deposit</strong> ($25
-          holds your seat &mdash; it&rsquo;s confirmed once the deposit is paid). When you pay, Square
-          emails your receipt automatically.
-        </p>
-        <p><a href="choose-glass.html" class="btn">Next: choose your glass &rarr;</a></p>
-        <!-- Optional Square deposit button. While the href still contains REPLACE, the script hides it. -->
-        <a id="deposit-btn" class="btn" href="https://square.link/REPLACE-WITH-SQUARE-DEPOSIT-LINK" target="_blank" rel="noopener" hidden>Pay Your Deposit</a>
+        <!-- Shown when seats are open (reserve mode) -->
+        <div class="reserve-only">
+          <h3>Request received &mdash; thank you!</h3>
+          <p>
+            Your spot is held while Sarah confirms. She&rsquo;ll email you shortly with the details and
+            a link to pay your <strong>deposit</strong> ($25
+            holds your seat &mdash; it&rsquo;s confirmed once the deposit is paid). When you pay, Square
+            emails your receipt automatically.
+          </p>
+          <p><a href="choose-glass.html" class="btn">Next: choose your glass &rarr;</a></p>
+          <!-- Optional Square deposit button. While the href still contains REPLACE, the script hides it. -->
+          <a id="deposit-btn" class="btn" href="https://square.link/REPLACE-WITH-SQUARE-DEPOSIT-LINK" target="_blank" rel="noopener" hidden>Pay Your Deposit</a>
+        </div>
+        <!-- Shown when the class is full (waitlist mode) -->
+        <div class="waitlist-only">
+          <h3>You&rsquo;re on the waitlist!</h3>
+          <p>
+            Thanks! This class is full, but we&rsquo;ve saved your place in line. We&rsquo;ll email you
+            the moment a seat opens up &mdash; or as soon as the next date is announced.
+          </p>
+        </div>
         <p class="fineprint">Questions? Email <a href="mailto:hello@fluxandthread.com">hello@fluxandthread.com</a>.</p>
       </div>
     </div>
@@ -236,6 +247,35 @@
 </footer>
 
 <script>
+// ---- Seats / waitlist mode --------------------------------------------------
+// SINGLE SOURCE OF TRUTH for remaining seats. Lower this as bookings come in;
+// set it to 0 (or less) and the whole page flips to WAITLIST mode automatically:
+// the badge reads "This class is full", the buttons become "Join the Waitlist",
+// and the form emails Sarah a "Waitlist — Simple Suncatcher" entry (no deposit).
+var SPOTS_LEFT = 4;
+(function () {
+  var full = SPOTS_LEFT <= 0;
+  var badge = document.querySelector('.spots-badge');
+  if (badge) {
+    badge.textContent = full ? 'This class is full'
+      : (SPOTS_LEFT === 1 ? '1 spot left' : SPOTS_LEFT + ' spots left');
+    badge.classList.toggle('is-full', full);
+  }
+  if (!full) return;                               // open: HTML defaults (reserve mode) are correct
+  document.body.classList.add('class-full');       // CSS swaps the confirmation + hides reserve-only bits
+  function txt(sel, s) { var el = document.querySelector(sel); if (el) el.textContent = s; }
+  var note = document.querySelector('.booking-note');
+  if (note) note.innerHTML = 'This class is full &mdash; <strong>join the waitlist</strong> below and '
+    + 'we&rsquo;ll email you the moment a seat opens up (or when the next date is announced).';
+  txt('.booking-reserve', 'Join the Waitlist');
+  txt('#reserve h2', 'Join the waitlist');
+  txt('#reserve-form button[type="submit"]', 'Join the Waitlist');
+  var subject = document.querySelector('#reserve-form input[name="subject"]');
+  if (subject) subject.value = 'Waitlist — Simple Suncatcher';
+  var phone = document.querySelector('#reserve-form input[name="phone"]');
+  if (phone) phone.setAttribute('placeholder', 'Phone (optional)');
+})();
+
 // ---- Reservation form: submit to Web3Forms, show confirmation ----
 (function () {
   var form = document.getElementById('reserve-form');

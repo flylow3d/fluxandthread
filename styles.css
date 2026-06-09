@@ -351,6 +351,12 @@ section { padding: 72px 0; }
   font-family: 'Lora', Georgia, serif; font-size: 0.9rem; color: var(--body);
   line-height: 1.5; margin: 0 0 16px;
 }
+/* Waitlist mode (set when SPOTS_LEFT <= 0 → body.class-full): muted "full" badge,
+   swap the confirmation message, and hide reserve-only actions. */
+.spots-badge.is-full { background: var(--bg-soft); color: var(--ink); border-color: var(--rule); }
+.waitlist-only { display: none; }
+body.class-full .reserve-only { display: none; }
+body.class-full .waitlist-only { display: block; }
 
 /* structured description block (full width, below the hero) */
 .workshop-detail { background: var(--bg); }
