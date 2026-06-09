@@ -59,7 +59,13 @@ workshop is **`workshop-simple-suncatcher.html`** (formerly `workshop-copper-foi
 Future workshops follow the `workshop-<design-slug>.html` scheme (copy the detail page, edit content
 + the hidden `workshop`/`subject` form fields, add a card to `workshops.html`). New pages duplicate the header/footer inline (no
 partials — GitHub Pages has no build step) and are whitelisted in `.gitignore` via `!/workshops.html`
-+ `!/workshop-*.html`. **Booking model = "start simple, manual deposits"** (Sarah's choice): the
++ `!/workshop-*.html`. **Every workshop page includes the waitlist toggle by default** (Sarah's
+choice, 2026-06-09): a `var SPOTS_LEFT = N` at the top of the page script is the single source of
+truth — lower it as seats book; at `0` the page auto-flips to **waitlist mode** (badge → "This class
+is full", buttons → "Join the Waitlist", form subject → "Waitlist — <design>", confirmation → "You're
+on the waitlist!", reserve-only deposit/choose-glass actions hidden via `body.class-full` +
+`.reserve-only`/`.waitlist-only` CSS). Copying the detail page carries this over automatically — just
+update the `SPOTS_LEFT` count and the "Waitlist — <design>" subject string. **Booking model = "start simple, manual deposits"** (Sarah's choice): the
 reservation form emails her via Web3Forms (same access key), then she sends a **Square** deposit
 link and confirms personally. An optional "Pay Your Deposit" Square button is built into the
 confirmation but **gated** — it stays hidden until the placeholder `square.link/REPLACE-…` href is
