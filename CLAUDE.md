@@ -97,18 +97,25 @@ default to **restockable** unless flagged (see [[glass-restockable-default]]). L
 in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
 **Open items / next steps:**
-- **Fill in the workshop placeholders** in `workshop-simple-suncatcher.html` (+ the listing card
-  in `workshops.html`): real **price, deposit amount, session date(s), spots-left count, time,
-  location, special notes / age minimum**, real **workshop photos** (gallery thumbs currently reuse
-  inprocess-diamonds + gnome), and the **Square deposit link** (replace the `REPLACE-…` href
-  to un-gate the Pay button). Search for `[` / `.placeholder` / `REPLACE` to find every spot. The
-  detail page now has a **Lucent-inspired layout** (2026-06-05): photo gallery + thumbnails, a
-  right-column **booking box** (price, a "Choose your date" `<select>` that is the single source of
-  truth for sessions — add/remove `<option>`s; keep the form's hidden `#session-field` default equal
-  to the first option — spots badge, Reserve button), and a structured What-you'll-learn / What's-
-  included / What-to-bring / Good-to-know description.
-- Get real workshop dates + price from Sarah once decided; replace the "dates being planned" note
-  with a real schedule (the Reserve flow now exists).
+- **Simple Suncatcher — what's left.** Real values are now IN for **price ($60), deposit ($25),
+  4 spots, location (Well Grounded), ages 18+**, the **What-to-bring/How-payment-works** copy, real
+  **gallery photos** (`simple-suncatcher-{design,cutting,foiling}.jpeg`), and the **5-piece glass
+  picker**. **Still TBD: session date(s) + time** — the booking-box "Choose your date" `<select>` is
+  the single source of truth (add `<option>`s; keep the hidden `#session-field` default equal to the
+  first option), plus the line in the `booking-facts`. Search `[` / `.placeholder` / `REPLACE` for
+  remaining spots.
+- **Payment: plan set, activation deferred.** Model = **Square + Venmo, deposit paid right after
+  reserving**; $60 total, $25 deposit, **$35 balance due 3 days before class** (Square invoice);
+  unpaid → waitlist. **Deposit buttons stay OFF the live site until Sarah sets the first class date**
+  ([[payment-activation-deferred]]); she'll then provide date + Square `square.link` deposit link +
+  Venmo handle → un-gate the Square button, add Venmo, switch confirmation to "pay now", drop the
+  date in, publish together.
+- **Waitlist: live + default.** `var SPOTS_LEFT` in the page script auto-flips the page to waitlist
+  mode at 0 (badge/buttons/subject/confirmation swap). Lower it as seats book. Carried into every
+  future workshop by copying the detail page.
+- **Future workshops:** build **Blooming Flowers** (`workshop-blooming-flowers.html`) + **Sweet Like
+  Honeycomb** (`workshop-honeycomb.html`) once Sarah has details — copy the Simple Suncatcher page
+  (waitlist toggle included), swap content + hidden `workshop`/`subject` fields, add a listing card.
 - **Email signup: ACTIVATED.** Web3Forms access key (tied to `fluxandthread.com`) is pasted into
   the `access_key` field in `index.html`, committed + pushed — the form now emails real signups to
   Sarah's inbox. **Pending Sarah's confirmation** that a real browser submission lands (server-side

@@ -180,3 +180,40 @@
 - Every change verified with headless Edge and **published**; all live on `fluxandthread.com`.
   PENDING still: real workshop price/dates/location/spots/Square link; a few sheets (Pale Lilac
   Gray, clears) read pale — optional reshoots.
+
+### Session 10 (2026-06-09)
+- **Organized workshops by design, not technique** (Sarah's call): renamed
+  `workshop-copper-foil-beginner.html` → **`workshop-simple-suncatcher.html`** (git mv; titles, hidden
+  form fields, listing card, glass-page back-link, homepage spotlight all repointed). Technique kept
+  as the `.smallcaps` sub-tag ("Beginner · Copper Foil"). **Blooming Flowers** + **Sweet Like
+  Honeycomb** reserved as future design names (`workshop-<design-slug>.html`).
+- **Swapped in real Simple Suncatcher sample photos** (Sarah's WIP shots of the blue+amber pinwheel):
+  gallery now leads with the assembled **design** + **cutting** and **foiling** process thumbs
+  (web-safe `simple-suncatcher-{design,cutting,foiling}.jpeg`); listing card uses the design photo.
+  Final glamour shot still to come.
+- **Wired Choose Your Glass to the real 5-piece pattern:** shows the labeled pattern diagram
+  (`Images/simple-suncatcher-pattern.png`) and replaced the 3 generic parts with **5 numbered pieces**
+  (`data-part="1".."5"` → `glass_for_1..5`, legends "Piece 1 · Top bar" … "Piece 5 · Center square").
+  Removed the old `geosquare.png`.
+- **Two Choose-Your-Glass polish passes:** closed a ~190px empty gap between the intro and the form
+  (zeroed adjoining section padding); **flipped the legend hierarchy** so the hand-numbered **"Piece N"**
+  is the large prominent label and the position name a small descriptor (maps to the pattern numbers).
+- **Filled real Simple Suncatcher details:** **$60** price, **$25** deposit, **4 spots**, Location
+  **Well Grounded**, **ages 18+**, plus What-to-Bring additions (closed-lid water bottle + snack;
+  "safety glasses if you prefer your own — loaners available"). Mirrored location to the listing card.
+  Session **dates/time + Square link still TBD**.
+- **De-duplicated the reserve flow:** moved the explanation into the booking box under the spots pill
+  (reworded to "Click Reserve a Spot…"), removed the repetitive bottom "Reserve your spot" heading,
+  added a friendly **"Just a few details"** heading over the form.
+- **Settled the payment plan** (advisory): **Square + Venmo**, guest pays the **$25 deposit right after
+  reserving**; **$35 balance due 3 days before class** via Square invoice (auto-reminders); unpaid →
+  seat released to the waitlist. Added a clear **"How payment works"** block. Per Sarah, the live
+  **deposit buttons stay OFF until the first class date is set** (saved as memory
+  [[payment-activation-deferred]]) — she'll then hand over date + Square link + Venmo handle to flip
+  on together.
+- **Built waitlist mode** (`var SPOTS_LEFT` single source of truth): lower it as seats book; at **0**
+  the page auto-flips — badge → "This class is full", buttons → **"Join the Waitlist"**, form subject →
+  "Waitlist — Simple Suncatcher", confirmation → "You're on the waitlist!", reserve-only deposit/
+  choose-glass actions hidden (`body.class-full` + `.reserve-only`/`.waitlist-only` CSS). Verified both
+  modes headless. **Made it the default for every future workshop** (documented in CLAUDE.md).
+- All changes verified with headless Edge and **published** to `fluxandthread.com`.
