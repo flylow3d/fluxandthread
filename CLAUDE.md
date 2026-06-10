@@ -113,6 +113,11 @@ in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choos
 - **Waitlist: live + default.** `var SPOTS_LEFT` in the page script auto-flips the page to waitlist
   mode at 0 (badge/buttons/subject/confirmation swap). Lower it as seats book. Carried into every
   future workshop by copying the detail page.
+- **Gallery: live.** Dedicated **`gallery.html`** (15 real pieces, lazy-loaded) is the nav "Gallery"
+  destination on all pages; homepage "From the Studio" shows 3 favorites (gnome · tulips · honeycomb) +
+  a "See the full gallery →" link. Add a new piece = drop a web-safe photo in `Images/` + one `<figure>`
+  in `gallery.html`. Booking automation was researched and **deferred** (stay manual; Bookwhen is the
+  pick when ready — [[booking-automation-research]]).
 - **Future workshops:** build **Blooming Flowers** (`workshop-blooming-flowers.html`) + **Sweet Like
   Honeycomb** (`workshop-honeycomb.html`) once Sarah has details — copy the Simple Suncatcher page
   (waitlist toggle included), swap content + hidden `workshop`/`subject` fields, add a listing card.
@@ -164,6 +169,7 @@ Sarah_Stained Glass/
 ├── workshops.html          ← Workshops listing page (nav "Workshop" → here)
 ├── workshop-simple-suncatcher.html  ← per-workshop detail + reservation form (design-named; first workshop)
 ├── choose-glass.html       ← "Choose Your Glass": pick a sheet per pattern part (per workshop)
+├── gallery.html            ← dedicated Gallery page (nav "Gallery" → here); homepage shows a teaser + "See the full gallery"
 ├── about.html              ← About page (nav "About" → here); Sarah's portrait + bio
 ├── styles.css              ← stained-glass aesthetic
 ├── Images/                 ← photos & generated figures (add real ones here)

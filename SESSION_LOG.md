@@ -217,3 +217,26 @@
   choose-glass actions hidden (`body.class-full` + `.reserve-only`/`.waitlist-only` CSS). Verified both
   modes headless. **Made it the default for every future workshop** (documented in CLAUDE.md).
 - All changes verified with headless Edge and **published** to `fluxandthread.com`.
+
+### Session 11 (2026-06-09)
+- **Homepage hero simplified:** replaced the two CTAs ("See the Workshop" / "View the Work") with a
+  single **"Check Out Our Workshops"** button → `workshops.html` (the grid).
+- **Researched booking automation** (Sarah didn't want to hand-update seat counts). A static site
+  can't count bookings, so true automation needs a tool that owns the inventory. Compared **Square,
+  Eventbrite, Bookwhen** (+ others) for the $60/$25-deposit/4-seat/waitlist case. **Decision: stay
+  MANUAL for now** (no date yet; not worth a subscription) — saved research + recommendation as memory
+  [[booking-automation-research]] (top pick when ready = **Bookwhen**; Eventbrite = free alt; Square
+  weakest — no class waitlist). Universal caveat: none auto-charge the **$35 balance**.
+- **Built a dedicated Gallery page** (`gallery.html`) — Sarah chose "homepage highlights + dedicated
+  page". New page reuses the `.gallery-grid` styles; **nav "Gallery" on all 5 pages now points to
+  `gallery.html`** (was `index.html#gallery`); homepage "From the Studio" keeps a few favorites + a new
+  **"See the full gallery →"** link (`.gallery-more`). Whitelisted `!/gallery.html`.
+- **Populated the gallery with Sarah's 11 new pieces** (she'd dropped them in `Images/`): web-safe
+  renamed (amber honeycomb, double flowers, tulips, barn in the fall, lighthouse night light, glass
+  lampshade, carrot/lemon/strawberry cake slices, flower petal panel, business card holder) and wired
+  in — **15 pieces total**, lazy-loaded, finished-showpieces first, in-process shots last. Captions
+  written from the photos.
+- **Refined the homepage "From the Studio" trio** for variety: swapped the **flyer → amber honeycomb**,
+  then the in-process hexagons → **peach tulips**. Final strip = gnome (figure) · tulips (floral) ·
+  honeycomb (geometric).
+- Everything verified with headless Edge and **published** to `fluxandthread.com`.
