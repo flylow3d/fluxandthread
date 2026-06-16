@@ -240,3 +240,26 @@
   then the in-process hexagons → **peach tulips**. Final strip = gnome (figure) · tulips (floral) ·
   honeycomb (geometric).
 - Everything verified with headless Edge and **published** to `fluxandthread.com`.
+
+### Session 12 (2026-06-13)
+- **Homepage workshop section made generic** (Sarah's call): header **"Simple Suncatcher" → "Join a
+  Workshop"**, eyebrow "First Workshop" → "Now Forming · Small Groups". The section now invites people
+  to workshops in general (the photo doesn't depict the named piece); specifics stay on the detail page.
+- **Researched selling finished pieces** (physical, one-of-a-kind, fragile). Compared **Square Online
+  vs Etsy** (+ Big Cartel/Ecwid) and the fragile-shipping logistics. **Decision: just EXPLORING — no
+  store set up yet.** Saved as memory [[shop-selling-pieces-research]] (recommendation when ready:
+  **Etsy first** for discovery + link from the gallery; Square Online for a branded on-site shop later;
+  USPS Ground Advantage ~$5–7 with $100 free insurance covers her price range — double-box + mark FRAGILE).
+- **Compiled a Student Loaner Kit checklist** (reusable totes, no glass/irons/grinders) → saved as
+  **`STUDENT_KIT.md`** + generated **`STUDENT_KIT.pdf`** (headless-Edge print) for her planning. These
+  are **local-only** (not whitelisted / not on the site).
+- **Site review + polish pass** (Sarah picked 3 of 4):
+  - **Email/contact:** site already points to `hello@fluxandthread.com` — Sarah is enabling **Porkbun
+    forwarding → her Gmail** (steps given); **no code change** needed.
+  - **Social share preview + favicon:** built a branded **1200×630 share card**
+    (`Images/share-card.png`) and added **Open Graph + Twitter tags + a logo favicon to all 6 pages**,
+    so the link previews nicely when shared.
+  - **Workshop FAQ:** added a no-JS `<details>` accordion on the Simple Suncatcher page (experience,
+    age, bring a friend, payment, what to bring, waitlist).
+  - (Skipped for now: refreshing the "Shop / Patterns coming soon" teasers.)
+- All site changes verified with headless Edge and **published** to `fluxandthread.com`.
