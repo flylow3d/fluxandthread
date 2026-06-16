@@ -104,12 +104,13 @@ in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choos
   the single source of truth (add `<option>`s; keep the hidden `#session-field` default equal to the
   first option), plus the line in the `booking-facts`. Search `[` / `.placeholder` / `REPLACE` for
   remaining spots.
-- **Payment: plan set, activation deferred.** Model = **Square + Venmo, deposit paid right after
-  reserving**; $60 total, $25 deposit, **$35 balance due 3 days before class** (Square invoice);
-  unpaid → waitlist. **Deposit buttons stay OFF the live site until Sarah sets the first class date**
-  ([[payment-activation-deferred]]); she'll then provide date + Square `square.link` deposit link +
-  Venmo handle → un-gate the Square button, add Venmo, switch confirmation to "pay now", drop the
-  date in, publish together.
+- **Payment: FULL PAYMENT, activation deferred** (changed 2026-06-16 from deposit+balance). Model =
+  **Square + Venmo, $60 paid in full to reserve** (one transaction). **Cancellation policy** live on
+  the page: 5+ days before class = **75% refund**; within 5 days = non-refundable; **transfer to a
+  friend or future class anytime**. **Payment button stays OFF the live site until Sarah sets the first
+  class date** ([[payment-activation-deferred]]); she'll then provide date + Square **$60 payment link**
+  + Venmo handle → un-gate the Square button (swap `REPLACE-WITH-SQUARE-PAYMENT-LINK`), add Venmo, drop
+  the date in, publish together.
 - **Waitlist: live + default.** `var SPOTS_LEFT` in the page script auto-flips the page to waitlist
   mode at 0 (badge/buttons/subject/confirmation swap). Lower it as seats book. Carried into every
   future workshop by copying the detail page.

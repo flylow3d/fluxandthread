@@ -90,7 +90,7 @@
 
           <div class="booking-price">
             $60
-            <span class="booking-price-note">$25 deposit holds your seat</span>
+            <span class="booking-price-note">Paid in full to reserve your seat</span>
           </div>
 
           <label class="booking-label" for="session-select">Choose your date</label>
@@ -107,7 +107,7 @@
           <div class="spots-badge">4 spots left</div>
 
           <p class="booking-note">Click <strong>Reserve a Spot</strong> below and Sarah will email you
-          to confirm your seat and send a link to pay your deposit. Spots are limited, so reserve early!</p>
+          a link to pay and lock in your seat. Spots are limited, so reserve early!</p>
 
           <a href="#reserve" class="btn booking-reserve">Reserve a Spot</a>
           <a href="choose-glass.html" class="btn btn-ghost booking-choose reserve-only">Choose Your Glass &rarr;</a>
@@ -155,10 +155,9 @@
 
           <div class="smallcaps learn-title">How payment works</div>
           <ul class="learn-list">
-            <li><strong>$60</strong> total per seat.</li>
-            <li>A <strong>$25 deposit</strong> reserves your spot when you register.</li>
-            <li>The remaining <strong>$35</strong> is due <strong>3 days before class</strong> &mdash; we&rsquo;ll send a quick payment link.</li>
-            <li>If the balance isn&rsquo;t paid by then, your seat may be offered to someone on the waitlist.</li>
+            <li><strong>$60</strong> per seat, <strong>paid in full</strong> to reserve your spot.</li>
+            <li>Register below, then we&rsquo;ll send you a quick payment link &mdash; your seat is locked once it&rsquo;s paid.</li>
+            <li><strong>Cancellations:</strong> 75% refund if you cancel 5+ days before class; within 5 days, non-refundable. Either way, you&rsquo;re welcome to send a friend or transfer to a future class.</li>
           </ul>
 
           <div class="note">
@@ -192,9 +191,15 @@
         </details>
         <details class="faq-item">
           <summary>How does payment work?</summary>
-          <p>It&rsquo;s $60 per seat. A $25 deposit reserves your spot when you register, and the
-          remaining $35 is due about three days before class &mdash; we&rsquo;ll send you a quick
-          payment link.</p>
+          <p>It&rsquo;s $60 per seat, paid in full to reserve. Register on this page and we&rsquo;ll send
+          you a quick payment link &mdash; your seat is locked once it&rsquo;s paid.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What&rsquo;s your cancellation policy?</summary>
+          <p>Plans change! If you cancel <strong>5 or more days before class</strong>, you&rsquo;ll receive
+          a <strong>75% refund</strong> &mdash; or you can transfer your seat to a friend or a future class.
+          <strong>Within 5 days</strong> of class, payment is non-refundable, but you&rsquo;re still
+          welcome to send a friend in your place or move to a future class.</p>
         </details>
         <details class="faq-item">
           <summary>What should I bring?</summary>
@@ -238,7 +243,7 @@
         </div>
 
         <div class="field-row">
-          <input type="tel" name="phone" placeholder="Phone (so Sarah can send your deposit link)" aria-label="Phone number">
+          <input type="tel" name="phone" placeholder="Phone (so Sarah can send your payment link)" aria-label="Phone number">
           <select name="seats" aria-label="How many seats?">
             <option value="1 seat">1 seat</option>
             <option value="2 seats">2 seats</option>
@@ -259,14 +264,13 @@
         <div class="reserve-only">
           <h3>Request received &mdash; thank you!</h3>
           <p>
-            Your spot is held while Sarah confirms. She&rsquo;ll email you shortly with the details and
-            a link to pay your <strong>deposit</strong> ($25
-            holds your seat &mdash; it&rsquo;s confirmed once the deposit is paid). When you pay, Square
-            emails your receipt automatically.
+            Your spot is held while Sarah confirms. She&rsquo;ll email you shortly with the details and a
+            link to <strong>pay in full ($60)</strong> &mdash; your seat is locked once payment clears.
+            Square emails your receipt automatically.
           </p>
           <p><a href="choose-glass.html" class="btn">Next: choose your glass &rarr;</a></p>
-          <!-- Optional Square deposit button. While the href still contains REPLACE, the script hides it. -->
-          <a id="deposit-btn" class="btn" href="https://square.link/REPLACE-WITH-SQUARE-DEPOSIT-LINK" target="_blank" rel="noopener" hidden>Pay Your Deposit</a>
+          <!-- Optional Square payment button. While the href still contains REPLACE, the script hides it. -->
+          <a id="deposit-btn" class="btn" href="https://square.link/REPLACE-WITH-SQUARE-PAYMENT-LINK" target="_blank" rel="noopener" hidden>Pay &amp; Reserve My Seat</a>
         </div>
         <!-- Shown when the class is full (waitlist mode) -->
         <div class="waitlist-only">
