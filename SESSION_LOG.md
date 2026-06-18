@@ -263,3 +263,25 @@
     age, bring a friend, payment, what to bring, waitlist).
   - (Skipped for now: refreshing the "Shop / Patterns coming soon" teasers.)
 - All site changes verified with headless Edge and **published** to `fluxandthread.com`.
+
+### Session 13 (2026-06-16)
+- **Email forwarding done** (Sarah's side): she set up Porkbun `hello@fluxandthread.com` → her Gmail;
+  the site's existing `hello@` links now work. No code change.
+- **Switched the workshop to FULL PAYMENT** (was $25 deposit + $35 balance). Sarah's call — one
+  transaction is simpler + better show-up rate. Updated across `workshop-simple-suncatcher.html`: the
+  booking-box note ("Paid in full to reserve your seat"), "How payment works", the reservation
+  confirmation, the payment button ("Pay & Reserve My Seat"; href now `REPLACE-WITH-SQUARE-PAYMENT-LINK`,
+  still gated), the phone hint, and the payment FAQ; **added a "What's your cancellation policy?" FAQ**.
+- **Cancellation policy decided + live:** **5+ days before class → 75% refund** (positive "75%" framing,
+  not "minus 25%" — the 25% covers the non-refunded Square fee + prepped materials); **within 5 days →
+  non-refundable**; **transfer to a friend or a future class anytime** (the friendly softener). Updated
+  memory [[payment-activation-deferred]] + CLAUDE.md to the new model ($60 full-payment Square link
+  needed, not a $25 deposit).
+- **Built a customer Workshop Guide PDF** (`Flux-and-Thread-Workshop-Guide.pdf`) — branded one-pager to
+  email signups: at-a-glance box, when/where, the 6-step class flow, what's included / what to bring,
+  "choose your glass before class," and the payment + cancellation policy. Tweaked step 2 to "Cut the
+  glass you've chosen" (they pick glass ahead of time) → re-rendered as `Workshop-Guide-updated.pdf`
+  (the original was open/locked in her editor; tidy the duplicate to the clean name once she closes it).
+  PDFs are local-only (not on the site).
+- Site changes verified headless and **published**; date + deposit/payment activation still the one big
+  pending item (waiting on rental-space confirmation).

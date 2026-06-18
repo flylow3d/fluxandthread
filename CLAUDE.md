@@ -127,16 +127,17 @@ in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choos
   Sarah's inbox. **Pending Sarah's confirmation** that a real browser submission lands (server-side
   tests are blocked by Cloudflare's bot challenge, which is expected). Note: Web3Forms usually
   sends a one-time **verification email** that must be clicked before submissions deliver.
-- **Contact email: Sarah's action.** All footer "Email" links + form error fallbacks point to
-  `hello@fluxandthread.com` (kept as-is — Sarah chose to keep the professional address). She's enabling
-  **Porkbun email forwarding** (`hello@` → her Gmail); links start working once that's on. **No code
-  change needed.** (Optional later: Gmail "send mail as" to reply from hello@.)
+- **Contact email: DONE (2026-06-16).** Sarah set up **Porkbun forwarding** `hello@fluxandthread.com`
+  → her Gmail, so the site's existing `hello@` links (footers + form fallbacks) now work. (Optional
+  later: Gmail "send mail as" to *reply* from hello@.)
 - **Polish done (2026-06-13):** homepage workshop section is now generic (**"Join a Workshop"**);
   **social share card** (`Images/share-card.png`) + Open Graph/Twitter tags + logo **favicon** on all 6
   pages (regenerate the card by rendering an HTML template at 1200×630 with headless Edge); a no-JS
   **FAQ** `<details>` accordion on the Simple Suncatcher page. **Selling pieces** was researched +
   **deferred** (exploring only — Etsy is the pick when ready, [[shop-selling-pieces-research]]).
-  A **Student Loaner Kit** list lives in local `STUDENT_KIT.md`/`.pdf` (not on the site).
+  A **Student Loaner Kit** list (`STUDENT_KIT.md`/`.pdf`) and a customer-facing **Workshop Guide**
+  (`Flux-and-Thread-Workshop-Guide.pdf`, regenerate from an HTML template via headless-Edge print) live
+  locally (not on the site) for Sarah to print/email.
 - **Publishing workflow:** Claude handles all git (Sarah just says "publish"). git + stored GitHub
   creds are already set up on this laptop — nothing to install.
 - More studio photos welcome (gallery currently reuses the 2 work photos + the flyer).
