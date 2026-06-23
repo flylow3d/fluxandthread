@@ -97,10 +97,10 @@ default to **restockable** unless flagged (see [[glass-restockable-default]]). L
 in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
 **Open items / next steps:**
-- **⚠️ BOOKING FULLY WIRED BUT LOCAL / UNPUBLISHED (as of 2026-06-22).** All the booking edits live in
-  the working tree **uncommitted** — Sarah is testing herself first and will say **"publish"** (likely
-  next session). **Do NOT `git add -A`/commit/push until she says publish** (it would publish the held
-  changes). When she does, one commit takes it all live. Details in [[payment-activation-deferred]].
+- **✅ BOOKING IS LIVE — launched 2026-06-23.** Simple Suncatcher booking is published on
+  `fluxandthread.com`: Square checkout (auto-caps at 4), July 11 & 25 dates, redirect to choose-glass
+  after payment. The "keep everything local" hold is OVER — **normal publish workflow resumed** (commit
+  + push when Sarah says "publish"). Details in [[payment-activation-deferred]].
 - **Payment = Square-only, $60 full payment, Option A** (booking button → Square checkout). **Two
   classes wired:** Sat **July 11** & Sat **July 25, 2026**, 1–4 PM, **Well Grounded Cafe** (14517 Lima
   Rd, Fort Wayne, IN). **Multi-date picker:** each `#session-select` `<option>` has its own `data-link`
