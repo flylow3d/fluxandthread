@@ -97,20 +97,17 @@ default to **restockable** unless flagged (see [[glass-restockable-default]]). L
 in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
 **Open items / next steps:**
-- **Simple Suncatcher — what's left.** Real values are now IN for **price ($60), deposit ($25),
-  4 spots, location (Well Grounded), ages 18+**, the **What-to-bring/How-payment-works** copy, real
-  **gallery photos** (`simple-suncatcher-{design,cutting,foiling}.jpeg`), and the **5-piece glass
-  picker**. **Still TBD: session date(s) + time** — the booking-box "Choose your date" `<select>` is
-  the single source of truth (add `<option>`s; keep the hidden `#session-field` default equal to the
-  first option), plus the line in the `booking-facts`. Search `[` / `.placeholder` / `REPLACE` for
-  remaining spots.
-- **Payment: FULL PAYMENT, activation deferred** (changed 2026-06-16 from deposit+balance). Model =
-  **Square + Venmo, $60 paid in full to reserve** (one transaction). **Cancellation policy** live on
-  the page: 5+ days before class = **75% refund**; within 5 days = non-refundable; **transfer to a
-  friend or future class anytime**. **Payment button stays OFF the live site until Sarah sets the first
-  class date** ([[payment-activation-deferred]]); she'll then provide date + Square **$60 payment link**
-  + Venmo handle → un-gate the Square button (swap `REPLACE-WITH-SQUARE-PAYMENT-LINK`), add Venmo, drop
-  the date in, publish together.
+- **⚠️ BOOKING FULLY WIRED BUT LOCAL / UNPUBLISHED (as of 2026-06-22).** All the booking edits live in
+  the working tree **uncommitted** — Sarah is testing herself first and will say **"publish"** (likely
+  next session). **Do NOT `git add -A`/commit/push until she says publish** (it would publish the held
+  changes). When she does, one commit takes it all live. Details in [[payment-activation-deferred]].
+- **Payment = Square-only, $60 full payment, Option A** (booking button → Square checkout). **Two
+  classes wired:** Sat **July 11** & Sat **July 25, 2026**, 1–4 PM, **Well Grounded Cafe** (14517 Lima
+  Rd, Fort Wayne, IN). **Multi-date picker:** each `#session-select` `<option>` has its own `data-link`
+  Square URL; JS routes `.booking-reserve` to the chosen date. **Add a date = one `<option>` line.**
+  Cancellation policy live: 5+ days = 75% refund; within 5 days = non-refundable; transfer anytime.
+  Square caps each date at 4 (item inventory) → auto sold-out; static site can't read Square live, so
+  per-date "sold out" is manual if she wants the page to show it. **Venmo dropped** (would break the cap).
 - **Waitlist: live + default.** `var SPOTS_LEFT` in the page script auto-flips the page to waitlist
   mode at 0 (badge/buttons/subject/confirmation swap). Lower it as seats book. Carried into every
   future workshop by copying the detail page.

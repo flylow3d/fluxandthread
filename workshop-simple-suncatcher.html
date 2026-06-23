@@ -85,7 +85,8 @@
           <h2>Simple Suncatcher</h2>
           <p class="lead-in">
             Have you ever wanted to learn how to make stained glass? Join a small-group, hands-on
-            workshop and build your own piece from the first cut to the final polish.
+            workshop and build your own piece from the first cut to the final polish &mdash; and
+            <strong>hand-pick your own glass colors</strong> from our collection along the way.
           </p>
 
           <div class="booking-price">
@@ -99,22 +100,21 @@
                IMPORTANT: keep the form's hidden #session-field default value (further down)
                equal to the FIRST option's value, so a date still submits if JS is off. -->
           <select id="session-select" class="light-select" aria-label="Choose your session date">
-            <option value="[SESSION 1 — DATE TBD]">[Session 1 &mdash; date TBD]</option>
-            <option value="[SESSION 2 — DATE TBD]">[Session 2 &mdash; date TBD]</option>
-            <option value="[SESSION 3 — DATE TBD]">[Session 3 &mdash; date TBD]</option>
+            <!-- One <option> per class date; each carries its own Square checkout link in data-link.
+                 To add a date: copy a line, set the date + that date's square.link URL. -->
+            <option value="Saturday, July 11, 2026" data-link="https://square.link/u/71taLGvv">Saturday, July 11, 2026</option>
+            <option value="Saturday, July 25, 2026" data-link="https://square.link/u/RwX6gjez">Saturday, July 25, 2026</option>
           </select>
 
-          <div class="spots-badge">4 spots left</div>
+          <p class="booking-note">Click <strong>Check for an Open Seat</strong> below to see the latest
+          availability and book through our secure Square checkout. Seats are limited &mdash; first come,
+          first served!</p>
 
-          <p class="booking-note">Click <strong>Reserve a Spot</strong> below and Sarah will email you
-          a link to pay and lock in your seat. Spots are limited, so reserve early!</p>
-
-          <a href="#reserve" class="btn booking-reserve">Reserve a Spot</a>
-          <a href="choose-glass.html" class="btn btn-ghost booking-choose reserve-only">Choose Your Glass &rarr;</a>
+          <a href="https://square.link/u/71taLGvv" class="btn booking-reserve" target="_blank" rel="noopener">Check for an Open Seat</a>
 
           <ul class="booking-facts" role="list">
-            <li><span class="label">Time</span> <span class="placeholder">[TIME TBD]</span></li>
-            <li><span class="label">Location</span> Well Grounded</li>
+            <li><span class="label">Time</span> 1&ndash;4 PM</li>
+            <li><span class="label">Location</span> Well Grounded Cafe</li>
           </ul>
         </div>
 
@@ -137,7 +137,7 @@
 
           <div class="smallcaps learn-title">What's included</div>
           <ul class="learn-list">
-            <li>All glass, copper foil, solder &amp; flux</li>
+            <li>Your choice of glass colors, plus copper foil, solder &amp; flux</li>
             <li>Use of cutters, grinders &amp; soldering irons</li>
             <li>Safety glasses and aprons</li>
             <li>Your finished piece to take home</li>
@@ -156,7 +156,7 @@
           <div class="smallcaps learn-title">How payment works</div>
           <ul class="learn-list">
             <li><strong>$60</strong> per seat, <strong>paid in full</strong> to reserve your spot.</li>
-            <li>Register below, then we&rsquo;ll send you a quick payment link &mdash; your seat is locked once it&rsquo;s paid.</li>
+            <li>Click <strong>Check for an Open Seat</strong> to book and pay securely through Square &mdash; your seat is locked the moment you check out.</li>
             <li><strong>Cancellations:</strong> 75% refund if you cancel 5+ days before class; within 5 days, non-refundable. Either way, you&rsquo;re welcome to send a friend or transfer to a future class.</li>
           </ul>
 
@@ -181,6 +181,13 @@
           your very first cut to soldering the finished piece. All skill levels are welcome.</p>
         </details>
         <details class="faq-item">
+          <summary>Do I get to choose my own glass?</summary>
+          <p>Yes &mdash; and it&rsquo;s everyone&rsquo;s favorite part! When you book (or a few days before
+          class), you&rsquo;ll hand-pick the exact glass colors for each piece of your suncatcher from our
+          collection of beautiful sheets &mdash; reserved just for you. Prefer a surprise? Sarah is happy to
+          hand-pick the perfect glass for you.</p>
+        </details>
+        <details class="faq-item">
           <summary>How old do I need to be?</summary>
           <p>This workshop is for ages 18 and up.</p>
         </details>
@@ -191,8 +198,8 @@
         </details>
         <details class="faq-item">
           <summary>How does payment work?</summary>
-          <p>It&rsquo;s $60 per seat, paid in full to reserve. Register on this page and we&rsquo;ll send
-          you a quick payment link &mdash; your seat is locked once it&rsquo;s paid.</p>
+          <p>It&rsquo;s $60 per seat, paid in full to reserve. Just click <strong>Check for an Open Seat</strong>
+          to book and pay securely through Square &mdash; your seat is locked the moment you check out.</p>
         </details>
         <details class="faq-item">
           <summary>What&rsquo;s your cancellation policy?</summary>
@@ -206,6 +213,11 @@
           <p>Just closed-toe shoes (required) and a hair tie if your hair is long. A water bottle and a
           snack are nice to have. Everything else &mdash; glass, tools, safety glasses, and aprons &mdash;
           is provided.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Where is it?</summary>
+          <p>We&rsquo;re at <strong>Well Grounded Cafe</strong>, 14517 Lima Rd, Fort Wayne, IN 46818
+          (<a href="https://www.google.com/maps/search/?api=1&amp;query=Well+Grounded+Cafe+14517+Lima+Rd+Fort+Wayne+IN+46818" target="_blank" rel="noopener">get directions</a>). Come a few minutes early and we&rsquo;ll get you set up!</p>
         </details>
         <details class="faq-item">
           <summary>What if the class is full?</summary>
@@ -233,7 +245,7 @@
         <!-- Receives the chosen session from the booking-box dropdown (#session-select).
              This default MUST match the FIRST <option> in #session-select so the form still
              submits a sensible date if JavaScript is unavailable. -->
-        <input type="hidden" name="session" id="session-field" value="[SESSION 1 — DATE TBD]">
+        <input type="hidden" name="session" id="session-field" value="Saturday, July 11, 2026">
         <!-- honeypot (hidden from people, catches bots) -->
         <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
 
@@ -270,7 +282,7 @@
           </p>
           <p><a href="choose-glass.html" class="btn">Next: choose your glass &rarr;</a></p>
           <!-- Optional Square payment button. While the href still contains REPLACE, the script hides it. -->
-          <a id="deposit-btn" class="btn" href="https://square.link/REPLACE-WITH-SQUARE-PAYMENT-LINK" target="_blank" rel="noopener" hidden>Pay &amp; Reserve My Seat</a>
+          <a id="deposit-btn" class="btn" href="https://square.link/u/71taLGvv" target="_blank" rel="noopener" hidden>Pay &amp; Reserve My Seat</a>
         </div>
         <!-- Shown when the class is full (waitlist mode) -->
         <div class="waitlist-only">
@@ -301,26 +313,23 @@
 </footer>
 
 <script>
-// ---- Seats / waitlist mode --------------------------------------------------
-// SINGLE SOURCE OF TRUTH for remaining seats. Lower this as bookings come in;
-// set it to 0 (or less) and the whole page flips to WAITLIST mode automatically:
-// the badge reads "This class is full", the buttons become "Join the Waitlist",
-// and the form emails Sarah a "Waitlist — Simple Suncatcher" entry (no deposit).
+// ---- Waitlist toggle --------------------------------------------------------
+// Square caps each date's seats and shows "Sold Out" at checkout, so the page no
+// longer shows a live count. This is a MANUAL override: set SPOTS_LEFT = 0 to flip
+// the whole page to WAITLIST mode (booking note + buttons become "Join the Waitlist";
+// the form emails Sarah a "Waitlist — Simple Suncatcher" entry). Leave it > 0 for
+// normal booking.
 var SPOTS_LEFT = 4;
 (function () {
   var full = SPOTS_LEFT <= 0;
-  var badge = document.querySelector('.spots-badge');
-  if (badge) {
-    badge.textContent = full ? 'This class is full'
-      : (SPOTS_LEFT === 1 ? '1 spot left' : SPOTS_LEFT + ' spots left');
-    badge.classList.toggle('is-full', full);
-  }
-  if (!full) return;                               // open: HTML defaults (reserve mode) are correct
+  if (!full) return;                               // open: HTML defaults (booking mode) are correct
   document.body.classList.add('class-full');       // CSS swaps the confirmation + hides reserve-only bits
   function txt(sel, s) { var el = document.querySelector(sel); if (el) el.textContent = s; }
   var note = document.querySelector('.booking-note');
   if (note) note.innerHTML = 'This class is full &mdash; <strong>join the waitlist</strong> below and '
     + 'we&rsquo;ll email you the moment a seat opens up (or when the next date is announced).';
+  var bookBtn = document.querySelector('.booking-reserve');
+  if (bookBtn) { bookBtn.setAttribute('href', '#reserve'); bookBtn.removeAttribute('target'); }
   txt('.booking-reserve', 'Join the Waitlist');
   txt('#reserve h2', 'Join the waitlist');
   txt('#reserve-form button[type="submit"]', 'Join the Waitlist');
@@ -393,8 +402,21 @@ var SPOTS_LEFT = 4;
   var sel = document.getElementById('session-select');
   var field = document.getElementById('session-field');
   if (!sel || !field) return;
-  function sync() { field.value = sel.value; }
-  sync(); // align on load (in case the browser restored a selection)
+  // Each <option> carries its own Square link in data-link; point the Reserve button at the
+  // chosen date's checkout. (Skipped in waitlist mode, where the button targets #reserve.)
+  function sync() {
+    field.value = sel.value;
+    var opt = sel.options[sel.selectedIndex];
+    var link = opt && opt.getAttribute('data-link');
+    var btn = document.querySelector('.booking-reserve');
+    if (btn && link && !document.body.classList.contains('class-full')) { btn.setAttribute('href', link); }
+  }
+  // Pre-select a date if the page was opened with ?date=<option value> (e.g. from the listing-card chips).
+  try {
+    var want = new URLSearchParams(location.search).get('date');
+    if (want) { for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === want) { sel.selectedIndex = i; break; } } }
+  } catch (e) {}
+  sync(); // align on load (also routes the Reserve button to the chosen date)
   sel.addEventListener('change', sync);
   var form = document.getElementById('reserve-form');
   if (form) form.addEventListener('submit', sync); // defensive: sync again at submit

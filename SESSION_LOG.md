@@ -285,3 +285,30 @@
   PDFs are local-only (not on the site).
 - Site changes verified headless and **published**; date + deposit/payment activation still the one big
   pending item (waiting on rental-space confirmation).
+
+### Session 14 (2026-06-22)
+- **GitHub Pages outage fixed:** Sarah set the repo private (free Pages needs public) → site 404'd.
+  Flipping back to public didn't auto-republish; the credential-extraction route to re-enable via API
+  was (correctly) blocked, so Sarah re-enabled Pages in **Settings → Pages**. Verified `fluxandthread.com`
+  + `www` back to **HTTP 200**. (Lesson: keep the repo public; a visibility change needs a Pages re-save.)
+- **Square 4-seat cap researched + explained:** a plain payment link can't cap; capping needs a Square
+  **item with inventory = 4** (free plan) → auto "Sold Out" + auto seat-count. Made a branded
+  **`Square-4-Seat-Setup-Cheatsheet.pdf`**. Clarified the static site can't read Square live (Square
+  enforces the cap at checkout; no overbooking).
+- **Booking went LIVE-ready (kept LOCAL for Sarah's test):** she set up the Square item + sent the
+  checkout link; wired it in (verified it loads). Chose **Option A — booking button goes straight to
+  Square**: `.booking-reserve` → the date's `square.link` URL; the on-site Web3Forms form is now hidden
+  by default (`#reserve { display:none }`) and only reappears as the **waitlist** when full. **Square-only
+  (Venmo dropped** — it'd break the auto-cap). Helped write the Square item description.
+- **First two classes wired:** **Sat July 11 & Sat July 25, 2026, 1–4 PM, Well Grounded Cafe**
+  (14517 Lima Rd, Fort Wayne, IN 46818). **Built a multi-date picker:** each date `<option>` carries its
+  own `data-link` Square URL (Jul 11 `…/71taLGvv`, Jul 25 `…/RwX6gjez`); date-picker JS routes the
+  Reserve button to the chosen date's checkout. Adding a date = one `<option>` line. Dropped the real
+  date/time/location into the booking box, `workshops.html` card, and `choose-glass.html`; added a
+  **"Where is it?" FAQ** with the address + a Google-Maps link.
+- **First-class marketing materials made** (branded, local): printable **flyer** (`Flyer-Simple-Suncatcher.pdf`
+  + `.png`) with a QR to the booking page, an **Instagram graphic** (`Instagram-Simple-Suncatcher.png`,
+  1080×1080), and a **welcome/confirmation note** (`Welcome-Note.pdf` + copy-paste text).
+- **STATUS: all the booking/site edits are LOCAL & UNCOMMITTED** (Sarah is testing herself first). **Not
+  pushed** — they go live together when she says "publish" (expected next session). Tonight's log was
+  updated locally too, intentionally **not committed**, to honor "keep everything local."
