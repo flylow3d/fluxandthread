@@ -49,14 +49,22 @@
         <!-- Left: photo gallery — real Simple Suncatcher sample photos (design + process). -->
         <div class="gallery">
           <div class="gallery-main photo">
-            <img id="gallery-main-img" src="Images/simple-suncatcher-design.jpeg" alt="The Simple Suncatcher — a pinwheel of deep-blue and textured amber glass, pieces fit together before soldering">
+            <img id="gallery-main-img" src="Images/simple-suncatcher-finished.jpeg" alt="A finished Simple Suncatcher hanging outside, catching the sunlight">
           </div>
           <ul class="thumbs" role="list">
             <li>
               <button type="button" class="thumb is-active" aria-pressed="true"
+                      data-full="Images/simple-suncatcher-finished.jpeg"
+                      data-alt="A finished Simple Suncatcher hanging outside, catching the sunlight"
+                      aria-label="Show: the finished suncatcher">
+                <img src="Images/simple-suncatcher-finished.jpeg" alt="">
+              </button>
+            </li>
+            <li>
+              <button type="button" class="thumb" aria-pressed="false"
                       data-full="Images/simple-suncatcher-design.jpeg"
                       data-alt="The Simple Suncatcher — a pinwheel of deep-blue and textured amber glass, pieces fit together before soldering"
-                      aria-label="Show: the finished suncatcher design">
+                      aria-label="Show: the assembled design">
                 <img src="Images/simple-suncatcher-design.jpeg" alt="">
               </button>
             </li>
