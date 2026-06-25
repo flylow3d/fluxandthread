@@ -312,3 +312,34 @@
 - **STATUS: all the booking/site edits are LOCAL & UNCOMMITTED** (Sarah is testing herself first). **Not
   pushed** — they go live together when she says "publish" (expected next session). Tonight's log was
   updated locally too, intentionally **not committed**, to honor "keep everything local."
+
+### Session 15 (2026-06-24)
+- **🎉 BOOKING WENT LIVE (published 2026-06-23).** Sarah said "publish" → committed + pushed the whole
+  Square booking flow. Simple Suncatcher is now bookable on `fluxandthread.com`: **Option A** (button →
+  Square checkout), **$60 full payment**, two dates (**Sat July 11 & 25, 2026, 1–4 PM, Well Grounded
+  Cafe**), Square auto-caps each date at 4 seats, **after-payment redirect → `choose-glass.html`** (set
+  on both Square links). The "keep everything local" hold is OVER — normal publish workflow resumed.
+  Updated memory [[payment-activation-deferred]] to **LIVE**.
+- **Booking-box polish:** removed the misleading "4 spots left" pill (Square is the real source of
+  truth), reworded the CTA to **"Check for an Open Seat,"** added a booking note explaining Square shows
+  live availability. Homepage made it clearly a **one-afternoon** class — date chips with "or" ("Pick a
+  Date": *Sat, Jul 11* or *Sat, Jul 25*) so it doesn't read like a 2-day class.
+- **Choose-Your-Glass = post-payment, not on-site:** removed the standalone "Choose Your Glass" button
+  from the workshop page; instead buyers are redirected there by Square after paying (intro reworded to
+  welcome just-paid guests: "choose now, or anytime before class — Sarah will send a link a few days
+  before"). Kept glass-choosing as a **selling point** in the lead-in, "What's included," and a new
+  "Do I get to choose my own glass?" FAQ ("people like the pretty glass").
+- **Finished-suncatcher photo wired across the site:** Sarah added her real finished piece; optimized it
+  (EXIF-rotated + resized to 1600×2133, 3.6 MB → 423 KB via System.Drawing). Now the **workshop lead
+  image** (with thumbnails) and a **gallery** figure. Smaller photo also shrank the flyer PDF (38 MB →
+  738 KB).
+- **Marketing assets (local-only, branded):** regenerated flyer + IG graphic with the finished photo;
+  built a **3-frame Instagram Story sequence** (1080×1920, `Story-1/2/3.png`) — frame 1 = the finished
+  piece. Wrote **IG + Facebook post captions** (launch + reminder variations) and short Story blurbs.
+  Advised best posting time (late morning / lunch + evening). Noted headless-Edge emoji gotcha: 📍🌈💜👇✨
+  render; 🪟🗓💵🪑 show as boxes — avoided the broken ones.
+- **Video deferred:** Sarah dropped `Images/Simple suncatcher movie.MOV` (~14 MB) to put on the workshop
+  page. `.MOV` won't play reliably in Chrome/Firefox → needs MP4 conversion; no converter installed and
+  **both** ffmpeg paths (gyan.dev download + `winget install`) were blocked by the safety classifier
+  without her okay. Explained options; **Sarah chose to hold it for now** (loves the page as-is). Logged
+  as memory [[workshop-video-pending]] to pick up later.

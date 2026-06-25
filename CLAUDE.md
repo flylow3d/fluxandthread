@@ -116,6 +116,9 @@ in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choos
   a "See the full gallery →" link. Add a new piece = drop a web-safe photo in `Images/` + one `<figure>`
   in `gallery.html`. Booking automation was researched and **deferred** (stay manual; Bookwhen is the
   pick when ready — [[booking-automation-research]]).
+- **Workshop video: pending.** Sarah's finished-piece clip (`Images/Simple suncatcher movie.MOV`, ~14 MB)
+  is meant for the workshop page but needs converting to web MP4 first; converter installs were blocked,
+  so it's deferred until she okays an ffmpeg install or supplies an `.mp4` herself ([[workshop-video-pending]]).
 - **Future workshops:** build **Blooming Flowers** (`workshop-blooming-flowers.html`) + **Sweet Like
   Honeycomb** (`workshop-honeycomb.html`) once Sarah has details — copy the Simple Suncatcher page
   (waitlist toggle included), swap content + hidden `workshop`/`subject` fields, add a listing card.
