@@ -264,6 +264,9 @@ section { padding: 72px 0; }
   font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: background 130ms ease, color 130ms ease;
 }
 .date-chip:hover { background: var(--lav); color: #1c1b22; }
+/* A sold-out date still links through (to the waitlist) but reads as full. */
+.date-chip.is-soldout { background: var(--bg-soft); color: var(--muted); border-color: var(--rule); font-weight: 500; }
+.date-chip.is-soldout:hover { background: var(--rule); color: var(--ink); }
 .date-or { font-size: 0.82rem; color: var(--muted); font-style: italic; margin: 0 3px; }
 
 /* prominent facts panel (detail page) */
@@ -370,6 +373,11 @@ body.class-full .waitlist-only { display: block; }
    hidden by default and only appears as the waitlist sign-up when the class is full. */
 #reserve { display: none; }
 body.class-full #reserve { display: block; }
+/* Per-date sold-out (a single date full while others stay open): the date picker adds
+   body.date-soldout when a sold-out <option> is chosen — same waitlist treatment as class-full. */
+body.date-soldout #reserve { display: block; }
+body.date-soldout .reserve-only { display: none; }
+body.date-soldout .waitlist-only { display: block; }
 
 /* FAQ accordion (no JS — native <details>) */
 .faq-section { background: var(--bg); }

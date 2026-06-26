@@ -110,8 +110,11 @@
           <select id="session-select" class="light-select" aria-label="Choose your session date">
             <!-- One <option> per class date; each carries its own Square checkout link in data-link.
                  To add a date: copy a line, set the date + that date's square.link URL. -->
+            <!-- Mark a date sold out: add data-soldout="true" to its <option>. The date picker then
+                 flips THIS DATE to waitlist mode (button → "Join the Waitlist", shows the form) while
+                 other dates still book normally. Remove the attribute (and the "— SOLD OUT" text) to reopen. -->
             <option value="Saturday, July 11, 2026" data-link="https://square.link/u/71taLGvv">Saturday, July 11, 2026</option>
-            <option value="Saturday, July 25, 2026" data-link="https://square.link/u/RwX6gjez">Saturday, July 25, 2026</option>
+            <option value="Saturday, July 25, 2026" data-link="https://square.link/u/RwX6gjez" data-soldout="true">Saturday, July 25, 2026 &mdash; SOLD OUT</option>
           </select>
 
           <p class="booking-note">Click <strong>Check for an Open Seat</strong> below to see the latest
@@ -405,26 +408,68 @@ var SPOTS_LEFT = 4;
   });
 })();
 
-// ---- Date picker: copy the chosen session into the form's hidden field ----
+// ---- Date picker: route the chosen date to booking OR (if sold out) to the waitlist ----
 (function () {
   var sel = document.getElementById('session-select');
   var field = document.getElementById('session-field');
   if (!sel || !field) return;
-  // Each <option> carries its own Square link in data-link; point the Reserve button at the
-  // chosen date's checkout. (Skipped in waitlist mode, where the button targets #reserve.)
+  var body = document.body;
+  var btn = document.querySelector('.booking-reserve');
+  var note = document.querySelector('.booking-note');
+  var subjectField = document.querySelector('#reserve-form input[name="subject"]');
+
+  var formH2 = document.querySelector('#reserve h2');
+  var submitBtn = document.querySelector('#reserve-form button[type="submit"]');
+  var phone = document.querySelector('#reserve-form input[name="phone"]');
+
+  // Remember the normal (open-seat) wording so we can restore it when switching back to an open date.
+  var OPEN_BTN = btn ? btn.textContent : 'Check for an Open Seat';
+  var OPEN_NOTE = note ? note.innerHTML : '';
+  var OPEN_SUBJECT = subjectField ? subjectField.value : 'Workshop reservation — Simple Suncatcher';
+  var OPEN_H2 = formH2 ? formH2.textContent : 'Just a few details';
+  var OPEN_SUBMIT = submitBtn ? submitBtn.textContent : 'Request My Spot';
+  var OPEN_PHONE = phone ? phone.getAttribute('placeholder') : '';
+
   function sync() {
     field.value = sel.value;
     var opt = sel.options[sel.selectedIndex];
-    var link = opt && opt.getAttribute('data-link');
-    var btn = document.querySelector('.booking-reserve');
-    if (btn && link && !document.body.classList.contains('class-full')) { btn.setAttribute('href', link); }
+    if (!opt) return;
+    // If the WHOLE page is in waitlist mode (SPOTS_LEFT<=0 → class-full), leave that to its toggle.
+    if (body.classList.contains('class-full')) return;
+
+    if (opt.getAttribute('data-soldout') === 'true') {
+      // This date is full → waitlist mode for this date only.
+      body.classList.add('date-soldout');
+      if (note) note.innerHTML = '<strong>' + opt.value + ' is sold out.</strong> Join the waitlist below and '
+        + 'we&rsquo;ll email you the moment a seat opens up &mdash; or choose an open date above.';
+      if (btn) { btn.textContent = 'Join the Waitlist'; btn.setAttribute('href', '#reserve'); btn.removeAttribute('target'); }
+      if (subjectField) subjectField.value = 'Waitlist — Simple Suncatcher (' + opt.value + ')';
+      if (formH2) formH2.textContent = 'Join the waitlist';
+      if (submitBtn) submitBtn.textContent = 'Join the Waitlist';
+      if (phone) phone.setAttribute('placeholder', 'Phone (optional)');
+    } else {
+      // Open date → normal Square checkout.
+      body.classList.remove('date-soldout');
+      if (note) note.innerHTML = OPEN_NOTE;
+      if (subjectField) subjectField.value = OPEN_SUBJECT;
+      if (formH2) formH2.textContent = OPEN_H2;
+      if (submitBtn) submitBtn.textContent = OPEN_SUBMIT;
+      if (phone && OPEN_PHONE) phone.setAttribute('placeholder', OPEN_PHONE);
+      if (btn) {
+        btn.textContent = OPEN_BTN;
+        btn.setAttribute('target', '_blank');
+        var link = opt.getAttribute('data-link');
+        if (link) btn.setAttribute('href', link);
+      }
+    }
   }
+
   // Pre-select a date if the page was opened with ?date=<option value> (e.g. from the listing-card chips).
   try {
     var want = new URLSearchParams(location.search).get('date');
     if (want) { for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === want) { sel.selectedIndex = i; break; } } }
   } catch (e) {}
-  sync(); // align on load (also routes the Reserve button to the chosen date)
+  sync(); // align on load (routes the button to booking or waitlist for the chosen date)
   sel.addEventListener('change', sync);
   var form = document.getElementById('reserve-form');
   if (form) form.addEventListener('submit', sync); // defensive: sync again at submit
