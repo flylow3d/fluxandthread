@@ -96,6 +96,12 @@ flagged one-of-a-kind). Sheets are **name-only** (no numbers; `.sw-no` is `displ
 default to **restockable** unless flagged (see [[glass-restockable-default]]). Linked from the workshop booking box + reservation confirmation; not
 in nav. Whitelisted via `!/choose-glass*.html`; future workshops copy → `choose-glass-<slug>.html`.
 
+**Private & Group Classes page added + LIVE** (2026-07-18). **`private-classes.html`** — for guests who want
+to book their own small private class (2–4 guests, $60–$75/person, hosted at Well Grounded Cafe / their home /
+garage) instead of waiting for an open date. A Web3Forms inquiry form (same access key) emails Sarah group
+size / occasion / preferred dates / location / notes; Sarah follows up manually to plan. In the top nav on
+every page + a "Have a group?" callout on `workshops.html`; whitelisted `!/private-classes.html`.
+
 **Open items / next steps:**
 - **✅ BOOKING IS LIVE — launched 2026-06-23.** Simple Suncatcher booking is published on
   `fluxandthread.com`: Square checkout (auto-caps at 4), July 11 & 25 dates, redirect to choose-glass

@@ -343,3 +343,20 @@
   **both** ffmpeg paths (gyan.dev download + `winget install`) were blocked by the safety classifier
   without her okay. Explained options; **Sarah chose to hold it for now** (loves the page as-is). Logged
   as memory [[workshop-video-pending]] to pick up later.
+
+### Session 16 (2026-07-18)
+- **🎉 NEW: Private & Group Classes page — built + LIVE.** A friend and a customer both asked Sarah about
+  booking their own private class rather than waiting for an open date, so we built **`private-classes.html`**:
+  a group-class pitch ("bring your own people") with a **Perfect for** list (birthdays, bachelorette/bridal,
+  girls' nights, family, just-for-fun) + a **How it works** rundown, and a **Web3Forms inquiry form** (same
+  access key) collecting name/email/phone, **group size**, **occasion**, **preferred dates**, **location
+  preference**, and notes. Confirmation-on-submit + graceful failure, mirroring the reservation form's JS.
+- **Wired in:** added **"Private Classes"** to the top nav on all pages (index, about, choose-glass, gallery,
+  workshops, workshop-simple-suncatcher, and self on private-classes), added a "Have a group?" callout at the
+  bottom of `workshops.html`, and whitelisted `!/private-classes.html` in `.gitignore`.
+- **Real details filled in (Sarah's numbers):** group size **2–4 guests** (dropdown narrowed to 2/3/4/Not sure),
+  **$60–$75 per person** (a range, since it depends on the glass project), hosting at **Well Grounded Cafe,
+  your home, or your garage**. Replaced all amber `[TBD]` placeholders with real copy.
+- **Trimmed "team building"** everywhere (list, occasion dropdown, both meta/OG descriptions, Workshops callout)
+  since private groups cap at 4 — reads as a small, cozy class now.
+- **Published in 3 commits** (page+nav, filled placeholders, team-building trim) — normal push workflow.
