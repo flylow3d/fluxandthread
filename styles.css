@@ -472,6 +472,22 @@ body.date-soldout .waitlist-only { display: block; }
 }
 .glass-part .part-hint { color: var(--muted); margin: 4px 0 16px; font-size: 0.95rem; }
 
+/* Fixed "clear glass, included" pieces (private class): read-only info card, no picks. */
+.glass-part-fixed {
+  border: 1px dashed var(--rule); border-radius: 4px;
+  background: var(--bg); padding: 18px 22px; margin: 0 0 26px;
+}
+.glass-part-fixed .part-n {
+  font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 600;
+  font-size: 1.9rem; line-height: 1.1; color: var(--muted);
+  margin-right: 12px; vertical-align: baseline;
+}
+.glass-part-fixed .part-name {
+  font-family: 'Lora', Georgia, serif; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; font-size: 0.82rem; color: var(--muted); vertical-align: baseline;
+}
+.glass-part-fixed .fixed-note { color: var(--muted); margin: 8px 0 0; font-size: 0.95rem; }
+
 .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
 
 /* swatch = visually-hidden radio + styled card (same trick as .timing) */
@@ -519,6 +535,7 @@ img.sw-tile { object-fit: cover; }
 .glass-form.surprise-on .surprise-note { display: block; }
 .glass-form.surprise-on .glass-mode-prompt { display: none; }
 .glass-form.surprise-on .glass-part { display: none; }
+.glass-form.surprise-on .glass-part-fixed { display: none; }
 .glass-form.surprise-on .glass-pattern { display: none; }
 
 .linklike { background: none; border: none; padding: 0; cursor: pointer;

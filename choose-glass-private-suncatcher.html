@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  Choose Your Glass — PRIVATE CLASS version of the Simple Suncatcher picker.
+
+  DIFFERENCE FROM choose-glass.html:
+  In this private class the students choose COLORED glass for only 3 pieces — pieces 1, 3, and 5
+  (data-part="1"/"3"/"5"). Pieces 2 and 4 are given CLEAR glass automatically, so they are shown
+  as read-only "clear glass, included" info cards (class .glass-part-fixed) with no swatches — the
+  completeness nudge only checks real .glass-part fieldsets, so it correctly requires only 3 picks.
+  There is also NO date dropdown (private classes have no set dates) — Sarah matches picks by name.
+
+  HOW TO ADD / EDIT / REMOVE A GLASS SHEET:
+  The swatches are generated from the GLASS list in the <script> at the bottom of this file
+  (one entry per sheet, shown automatically under every choosable pattern part). To add a sheet:
+    1. Put the photo in Images/glass/ (web-safe name, e.g. butter-yellow.jpeg).
+    2. Add one line to GLASS:  { name: "Butter Yellow", file: "butter-yellow.jpeg" }
+       For a one-of-a-kind sheet add `, ooak: true` — it gets a badge + "(one of a kind)" in
+       Sarah's email. Default (no ooak) = restockable.
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choose Your Glass — Private Class — Flux + Thread</title>
+<meta name="description" content="Private class guests: pick colored glass for three pieces of your Simple Suncatcher — the other two are clear glass, included. Reserved just for you.">
+<link rel="icon" type="image/png" href="Images/logo-badge.png">
+<link rel="apple-touch-icon" href="Images/logo-badge.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Flux + Thread">
+<meta property="og:title" content="Choose Your Glass — Private Class — Flux + Thread">
+<meta property="og:description" content="Private class guests: pick colored glass for three pieces of your Simple Suncatcher — the other two are clear glass, included. Reserved just for you.">
+<meta property="og:image" content="https://fluxandthread.com/Images/share-card.png">
+<meta property="og:url" content="https://fluxandthread.com/choose-glass-private-suncatcher.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fluxandthread.com/Images/share-card.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <img src="Images/logo-badge.png" alt="Flux + Thread logo">
+      <span class="wordmark">Flux <span class="plus">+</span> Thread</span>
+    </a>
+    <nav class="site-nav">
+      <a href="workshops.html">Workshop</a>
+      <a href="private-classes.html">Private Classes</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="index.html#shop">Shop</a>
+      <a href="about.html">About</a>
+      <a href="index.html#signup" class="btn">Get Updates</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ INTRO ============ -->
+  <section class="glass-intro">
+    <div class="container">
+      <p class="back-link"><a href="private-classes.html">&larr; Back to private classes</a></p>
+      <div class="section-rule"><h2>Choose Your Glass</h2></div>
+      <p class="section-sub">
+        Choosing your glass is half the fun! For your private-class Simple Suncatcher, you get to pick
+        the colored glass for <strong>three pieces</strong> &mdash; pieces <strong>1, 3, and 5</strong>
+        below. The other two pieces (2 and 4) are made with <strong>clear glass, included</strong>, so
+        those are already taken care of. Sarah will set your chosen sheets aside for your class,
+        <strong>reserved just for you.</strong> No rush &mdash; choose now, or anytime before class.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ GLASS PICKER FORM ============ -->
+  <section class="glass-picker">
+    <div class="container">
+      <form id="glass-form" class="signup glass-form">
+        <!-- Web3Forms: free form-to-email. -->
+        <input type="hidden" name="access_key" value="7c79ef98-6a4b-4696-a94f-9fb109ec653f">
+        <input type="hidden" name="subject" value="Glass picks — Private Simple Suncatcher Class">
+        <input type="hidden" name="from_name" value="Flux + Thread website">
+        <!-- Which class. -->
+        <input type="hidden" name="workshop" value="Private Simple Suncatcher Class">
+        <!-- Reminder to Sarah that pieces 2 & 4 are clear glass in this class. -->
+        <input type="hidden" name="clear_pieces" value="Pieces 2 &amp; 4 = clear glass (provided)">
+        <!-- Set by the "Surprise me" button (JS); tells Sarah whether the guest chose or wants a surprise. -->
+        <input type="hidden" name="glass_selection" id="glass-selection" value="Picking their own glass (see choices below)">
+        <!-- honeypot (hidden from people, catches bots) -->
+        <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+
+        <!-- Guest details so Sarah can match these picks to a booking -->
+        <div class="glass-guest">
+          <div class="field-row">
+            <input type="text" name="name" placeholder="Your name" aria-label="Your name" required>
+            <input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
+          </div>
+          <p class="part-hint multi-seat-note">One person per form, please &mdash; if a few of you are in
+          the class, each guest fills this out <strong>once</strong> (use a different name each time so
+          Sarah knows whose glass is whose).</p>
+        </div>
+
+        <!-- ===== CHOOSE-OR-SURPRISE ===== -->
+        <div class="glass-mode">
+          <div class="glass-mode-prompt">
+            <div class="mode-or"><span>pick your glass below &mdash; or</span></div>
+            <button type="button" id="surprise-btn" class="btn btn-ghost">Surprise me &#10024;</button>
+            <p class="mode-hint">Prefer not to choose? Let Sarah hand-pick the perfect glass for your piece.</p>
+          </div>
+          <div class="surprise-note" role="status">
+            <p><strong>Wonderful &mdash; it&rsquo;s a surprise! &#10024;</strong> Sarah will hand-pick colored glass that
+            suits your piece and set it aside for your class. Just add your details above and reserve your spot.</p>
+            <button type="button" id="pick-own-btn" class="linklike">Actually, I&rsquo;ll pick my own &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Pattern map: guests match each numbered piece below to this diagram. -->
+        <figure class="glass-pattern">
+          <img src="Images/simple-suncatcher-pattern.png" alt="Simple Suncatcher pattern: a square pinwheel of five numbered pieces — 1 across the top, 2 down the right, 3 across the bottom, 4 down the left, and 5 a small square in the center">
+          <figcaption>Your pattern &mdash; pick colored glass for pieces 1, 3, and 5. Pieces 2 and 4 are clear glass, included.</figcaption>
+        </figure>
+
+        <!-- ===== PATTERN PIECES ===== -->
+        <!-- Choosable colored pieces (1, 3, 5): swatch grids filled by the GLASS list in the script below. -->
+        <fieldset class="glass-part" data-part="1">
+          <legend><span class="part-n">Piece 1</span> <span class="part-name">Top bar</span></legend>
+          <p class="part-hint">The wide bar across the top of the pinwheel.</p>
+          <div class="swatch-grid"></div>
+        </fieldset>
+
+        <!-- Piece 2 — clear glass, provided (read-only info card, no picks) -->
+        <div class="glass-part-fixed">
+          <div class="fixed-head"><span class="part-n">Piece 2</span> <span class="part-name">Right column</span></div>
+          <p class="fixed-note"><strong>Clear glass, included.</strong> Nothing to choose here &mdash; this piece is made with clear glass.</p>
+        </div>
+
+        <fieldset class="glass-part" data-part="3">
+          <legend><span class="part-n">Piece 3</span> <span class="part-name">Bottom bar</span></legend>
+          <p class="part-hint">The wide bar across the bottom of the pinwheel.</p>
+          <div class="swatch-grid"></div>
+        </fieldset>
+
+        <!-- Piece 4 — clear glass, provided (read-only info card, no picks) -->
+        <div class="glass-part-fixed">
+          <div class="fixed-head"><span class="part-n">Piece 4</span> <span class="part-name">Left column</span></div>
+          <p class="fixed-note"><strong>Clear glass, included.</strong> Nothing to choose here &mdash; this piece is made with clear glass.</p>
+        </div>
+
+        <fieldset class="glass-part" data-part="5">
+          <legend><span class="part-n">Piece 5</span> <span class="part-name">Center square</span></legend>
+          <p class="part-hint">The small square right in the middle.</p>
+          <div class="swatch-grid"></div>
+        </fieldset>
+
+        <button type="submit" class="btn glass-submit">Reserve My Glass</button>
+        <p id="glass-status" class="signup-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ CONFIRMATION ============ -->
+  <section class="band">
+    <div class="container">
+      <div id="glass-confirm" class="reserve-confirm" hidden>
+        <h3>Your glass is reserved &mdash; thank you!</h3>
+        <p class="confirm-pick">
+          Sarah will set aside the exact sheets you chose for your class, held with your name on them.
+          Pieces 2 and 4 will be clear glass, included. If anything you picked turns out to be
+          unavailable, she&rsquo;ll email you a close alternative before class day.
+        </p>
+        <p class="confirm-surprise" hidden>
+          Sarah will hand-pick colored glass that suits your piece and set it aside for your class &mdash; a
+          little surprise to look forward to. She&rsquo;ll have everything ready for you on the day.
+        </p>
+        <p class="fineprint">Questions? Email <a href="mailto:hello@fluxandthread.com">hello@fluxandthread.com</a>.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <img src="Images/logo-badge.png" alt="Flux + Thread logo">
+    <div class="tag">Handmade with love</div>
+    <div>Flux + Thread &middot; Stained Glass Studio &amp; Workshops</div>
+    <div class="social">
+      <a href="https://www.instagram.com/fluxandthread/" target="_blank" rel="noopener">Instagram</a>
+      <a href="index.html#signup">Get Updates</a>
+      <a href="mailto:hello@fluxandthread.com">Email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ====== THE GLASS LIST — add/edit/remove sheets here (appears under every choosable part) ======
+// { name: "<shown name>", file: "<file in Images/glass/>", ooak: true (optional, one-of-a-kind) }
+var GLASS = [
+  { name: "Pale Lilac Gray",          file: "pale-lilac-gray.png" },
+  { name: "Lime Green Streaky",       file: "lime-green-streaky.png" },
+  { name: "Dark Yellow Streaky",      file: "dark-yellow-streaky.png" },
+  { name: "Butter Yellow",            file: "butter-yellow.jpeg", ooak: true },
+  { name: "Peachy Red Smoothie",      file: "peachy-red-smoothie.png" },
+  { name: "Opaque Bright Red",        file: "opaque-bright-red.jpeg" },
+  { name: "Translucent Cherry Red",   file: "translucent-cherry-red.png", ooak: true },
+  { name: "Earthy Swirl",             file: "earthy-swirl.jpeg", ooak: true },
+  { name: "Green Brown Swirl",        file: "green-brown-swirl.jpeg", ooak: true },
+  { name: "Green Blue Swirl",         file: "green-blue-swirl.jpeg", ooak: true },
+  { name: "Opaque Seafoam Blue",      file: "opaque-seafoam-blue.jpeg" },
+  { name: "Translucent Teal Swirl",   file: "translucent-teal-swirl.jpeg" },
+  { name: "Blue Waves",               file: "blue-waves.png" },
+  { name: "Light Blue Swirl",         file: "light-blue-swirl.png" },
+  { name: "Translucent Sky Blue",     file: "translucent-sky-blue.jpeg", ooak: true },
+  { name: "Translucent Bright Blue",  file: "translucent-bright-blue.jpeg", ooak: true },
+  { name: "Opaque Bright Blue",       file: "opaque-bright-blue.jpeg", ooak: true },
+  { name: "Rippled Translucent Blue", file: "rippled-translucent-blue.jpeg", ooak: true },
+  { name: "Holographic Blue",         file: "holographic-blue.jpeg", ooak: true },
+  { name: "Clear Waters",             file: "clear-waters.jpeg", ooak: true },
+  { name: "Clear White Wispy",        file: "clear-white-wispy.jpeg" },
+  { name: "Grey and White Wispy",     file: "grey-and-white-wispy.png" },
+  { name: "Translucent Dark Gray",    file: "translucent-dark-gray.jpeg", ooak: true }
+];
+
+// Build the swatches into every choosable part's grid from the GLASS list.
+(function () {
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  var grids = document.querySelectorAll('.glass-part');
+  for (var p = 0; p < grids.length; p++) {
+    var fs = grids[p];
+    var part = fs.getAttribute('data-part');
+    var grid = fs.querySelector('.swatch-grid');
+    var html = '';
+    for (var i = 0; i < GLASS.length; i++) {
+      var g = GLASS[i];
+      var val = esc(g.ooak ? g.name + ' (one of a kind)' : g.name);
+      html += '<label class="swatch"><input type="radio" name="glass_for_' + part + '" value="' + val + '">'
+        + '<span class="sw-inner"><img class="sw-tile" src="Images/glass/' + encodeURI(g.file) + '" alt="" loading="lazy">'
+        + '<span class="sw-cap"><span class="sw-name">' + esc(g.name) + '</span>'
+        + (g.ooak ? '<span class="sw-ooak">One of a kind</span>' : '')
+        + '</span><span class="sw-check" aria-hidden="true">Reserved for you</span></span></label>';
+    }
+    grid.innerHTML = html;
+  }
+})();
+
+// ====== Form behaviour: surprise toggle, completeness nudge, submit + confirm ======
+(function () {
+  var form = document.getElementById('glass-form');
+  if (!form) return;
+  var statusEl = document.getElementById('glass-status');
+  var confirmEl = document.getElementById('glass-confirm');
+  var submitBtn = form.querySelector('.glass-submit');
+  var modeField = document.getElementById('glass-selection');
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'signup-status show ' + (kind || ''); }
+
+  // ---- Surprise me: let Sarah hand-pick instead of choosing ----
+  var PICK_MSG = 'Picking their own glass (see choices below)';
+  var SURPRISE_MSG = '✨ SURPRISE ME — please pick colored glass for this guest';
+  function setSurprise(on) {
+    form.classList.toggle('surprise-on', on);
+    if (modeField) modeField.value = on ? SURPRISE_MSG : PICK_MSG;
+    if (submitBtn) submitBtn.textContent = on ? 'Reserve My Surprise ✨' : 'Reserve My Glass';
+    if (on) {  // clear any picks so they don't email alongside the surprise flag
+      form.querySelectorAll('.glass-part input[type="radio"]:checked').forEach(function (r) { r.checked = false; });
+    }
+    setStatus('', '');
+  }
+  var surpriseBtn = document.getElementById('surprise-btn');
+  var pickOwnBtn = document.getElementById('pick-own-btn');
+  if (surpriseBtn) surpriseBtn.addEventListener('click', function () { setSurprise(true); });
+  if (pickOwnBtn) pickOwnBtn.addEventListener('click', function () { setSurprise(false); });
+
+  function showConfirm() {
+    var surprise = form.classList.contains('surprise-on');
+    var pickP = confirmEl.querySelector('.confirm-pick');
+    var surpriseP = confirmEl.querySelector('.confirm-surprise');
+    if (pickP) pickP.hidden = surprise;
+    if (surpriseP) surpriseP.hidden = !surprise;
+    confirmEl.hidden = false;
+    confirmEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Nudge: every choosable part needs a sheet, or Sarah can't cut the piece.
+    // (Only .glass-part fieldsets are checked — pieces 2 & 4 are fixed clear glass.)
+    // (Skipped when the guest chose "Surprise me" — Sarah picks for them.)
+    if (!form.classList.contains('surprise-on')) {
+      var parts = form.querySelectorAll('.glass-part');
+      var unchosen = [];
+      parts.forEach(function (fs) {
+        if (!fs.querySelector('input[type="radio"]:checked')) {
+          var lg = fs.querySelector('legend');
+          unchosen.push(lg ? lg.textContent.replace(/\[.*?\]/g, '').trim() : 'a part');
+        }
+      });
+      if (unchosen.length) {
+        setStatus('Please pick a sheet for: ' + unchosen.join(', ') + '.', 'err');
+        parts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+
+    var key = form.elements['access_key'].value;
+    // Not yet activated: don't fail loudly — thank them and move on.
+    if (!key || key.indexOf('PASTE') !== -1) {
+      setStatus('Thanks! Glass picks go live in just a moment — please check back soon.', 'pending');
+      return;
+    }
+    setStatus('Sending…', '');
+    fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(form) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.success) {
+          form.reset();
+          setStatus('', '');
+          showConfirm();
+        } else {
+          setStatus('That didn’t go through. Please try again, or email hello@fluxandthread.com.', 'err');
+        }
+      })
+      .catch(function () { setStatus('Network hiccup — please try again in a moment.', 'err'); });
+  });
+})();
+</script>
+
+</body>
+</html>
