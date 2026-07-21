@@ -360,3 +360,19 @@
 - **Trimmed "team building"** everywhere (list, occasion dropdown, both meta/OG descriptions, Workshops callout)
   since private groups cap at 4 — reads as a small, cozy class now.
 - **Published in 3 commits** (page+nav, filled placeholders, team-building trim) — normal push workflow.
+
+### Session 17 (2026-07-20)
+- **🎉 NEW: Private-class "Choose Your Glass" page — built + LIVE.** For an upcoming private class using the
+  Simple Suncatcher pattern, the host and Sarah agreed students pick colored glass for only **3 pieces**
+  (pattern pieces **1 · top bar, 3 · bottom bar, 5 · center square**) while pieces **2 & 4 are given clear
+  glass**. Built **`choose-glass-private-suncatcher.html`** (copied from `choose-glass.html`):
+  - Pieces 1/3/5 keep the data-driven swatch grids (all 23 sheets from the shared `GLASS` list).
+  - Pieces 2/4 render as read-only **"Clear glass, included"** info cards (new `.glass-part-fixed` class) —
+    no radios, so the completeness nudge correctly requires only the 3 colored picks.
+  - **Date dropdown removed** (private classes have no set dates) — name + email only; Sarah matches by name.
+  - Hidden fields updated: subject/workshop = **"Private Simple Suncatcher Class"**, plus a `clear_pieces`
+    note so her email is unambiguous. "Surprise me" + confirmation copy kept (mention 2 & 4 are clear).
+- **CSS added** to `styles.css`: `.glass-part-fixed` info-card styling (dashed border, muted) and a
+  `.surprise-on .glass-part-fixed { display:none }` rule so the fixed cards hide in surprise mode too.
+- Whitelisted automatically by the existing `!/choose-glass*.html` rule. **Published in 1 commit.** Link to
+  share with the host: `https://fluxandthread.com/choose-glass-private-suncatcher.html`.
