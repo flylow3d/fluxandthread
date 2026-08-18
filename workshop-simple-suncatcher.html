@@ -98,33 +98,21 @@
             <strong>hand-pick your own glass colors</strong> from our collection along the way.
           </p>
 
-          <div class="booking-price">
-            $60
-            <span class="booking-price-note">Paid in full to reserve your seat</span>
+          <!-- ===== BOOKING CLOSED (Aug 22, 2026 class taken down; planning September dates) =====
+               TO REOPEN BOOKING: restore the price block, the "Choose your date" <label> +
+               #session-select dropdown, the .booking-note, and the .booking-reserve checkout button
+               (see git history for the Aug 22 version), then add the new date <option>(s) with each
+               date's Square link, and unhide the reservation form section (#reserve) below. -->
+          <div class="note booking-closed">
+            <strong>New dates coming for September!</strong> Our August 22 class has closed, and
+            we&rsquo;re busy planning the next round of workshops for September 2026. Join our list
+            and you&rsquo;ll be the first to know the moment new dates open.
           </div>
 
-          <label class="booking-label" for="session-select">Choose your date</label>
-          <!-- SINGLE SOURCE OF TRUTH for session dates. Add or remove <option>s here only.
-               One date now; built to grow to several sessions later.
-               IMPORTANT: keep the form's hidden #session-field default value (further down)
-               equal to the FIRST option's value, so a date still submits if JS is off. -->
-          <select id="session-select" class="light-select" aria-label="Choose your session date">
-            <!-- One <option> per class date; each carries its own Square checkout link in data-link.
-                 To add a date: copy a line, set the date + that date's square.link URL. -->
-            <!-- Mark a date sold out: add data-soldout="true" to its <option>. The date picker then
-                 flips THIS DATE to waitlist mode (button → "Join the Waitlist", shows the form) while
-                 other dates still book normally. Remove the attribute (and the "— SOLD OUT" text) to reopen. -->
-            <option value="Saturday, August 22, 2026" data-link="https://square.link/u/zX8ZQWG7">Saturday, August 22, 2026</option>
-          </select>
-
-          <p class="booking-note">Click <strong>Check for an Open Seat</strong> below to see the latest
-          availability and book through our secure Square checkout. Seats are limited &mdash; first come,
-          first served!</p>
-
-          <a href="https://square.link/u/zX8ZQWG7" class="btn booking-reserve" target="_blank" rel="noopener">Check for an Open Seat</a>
+          <a href="index.html#signup" class="btn booking-reserve">Get Updates</a>
 
           <ul class="booking-facts" role="list">
-            <li><span class="label">Time</span> 1&ndash;5 PM</li>
+            <li><span class="label">Next dates</span> September 2026 &mdash; being planned</li>
             <li><span class="label">Location</span> Well Grounded Cafe</li>
           </ul>
         </div>
@@ -241,8 +229,10 @@
 
   <!-- ============ RESERVATION FORM ============ -->
   <!-- (Heading + intro moved into the booking box as .booking-note; the booking-box
-       "Reserve a Spot" button scrolls here to these fields.) -->
-  <section id="reserve" class="band">
+       "Reserve a Spot" button scrolls here to these fields.)
+       HIDDEN while booking is closed (Aug 22 taken down). Remove the `hidden` attribute
+       below to bring the reservation form back when new September dates open. -->
+  <section id="reserve" class="band" hidden>
     <div class="container">
       <h2>Just a few details</h2>
 
