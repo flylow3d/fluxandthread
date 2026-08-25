@@ -1704,7 +1704,7 @@ function importSVG(source, opt) {
     for (var k in r) css[k] = r[k];
   });
 
-  var notes = [], shapes = [], warned = {};
+  var notes = [], shapes = [], warned = {}, strokeOnly = 0;
   function warn(kind, text) { if (!warned[kind]) { warned[kind] = 1; notes.push({ kind: kind, text: text }); } }
 
   var tol = opt.curveTolerance || 0.2;
@@ -1719,7 +1719,8 @@ function importSVG(source, opt) {
       if (r) for (var k in r) out[k] = r[k];
     });
     if (css[node.tag]) for (var k2 in css[node.tag]) out[k2] = css[node.tag][k2];
-    ['fill', 'fill-opacity', 'opacity', 'display', 'fill-rule'].forEach(function (p) {
+    ['fill', 'fill-opacity', 'opacity', 'display', 'fill-rule',
+     'stroke', 'stroke-width'].forEach(function (p) {
       if (node.attrs[p] !== undefined) out[p] = node.attrs[p];
     });
     var st = parseStyleAttr(node.attrs.style);
@@ -1757,7 +1758,19 @@ function importSVG(source, opt) {
           continue;
         }
         var rgb = parseColour(raw);
-        if (!rgb) continue;                                 /* fill:none — outline only */
+        if (!rgb) {
+          /* fill:none. If it is drawn with a stroke, the shape is a line
+           * rather than an area — we only stitch areas, so say so plainly
+           * instead of letting it vanish. */
+          if (parseColour(st.stroke)) {
+            strokeOnly++;
+            warn('stroke', 'Parts of this drawing are outlines (lines) rather than filled ' +
+                           'shapes, and only filled shapes can be stitched. In your drawing ' +
+                           'program select them and use "Outline Stroke" / "Stroke to Path" — ' +
+                           'that turns each line into a thin filled shape — then save again.');
+          }
+          continue;
+        }
         var rings = shapeRings(ch, tol)
           .map(function (r) { return r.map(function (p) { return applyMat(m, p); }); })
           .filter(function (r) { return r.length > 2; });
@@ -1772,7 +1785,7 @@ function importSVG(source, opt) {
   if (!shapes.length && !notes.length) {
     notes.push({ kind: 'empty', text: 'No filled shapes were found in that SVG.' });
   }
-  return { shapes: shapes, notes: notes };
+  return { shapes: shapes, notes: notes, strokeOnly: strokeOnly };
 }
 
 function findTag(node, tag) {
