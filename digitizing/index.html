@@ -995,13 +995,55 @@ function generateRuns(blocks, opt) {
 /* Shapes come in from svg-import.js already flattened to polygons in the
  * drawing's own units, with their real fill colours. Nothing has to be
  * guessed: no colour clustering, no speckle cleanup, no tracing. */
+/* A drawing often carries its own background — a shape painted first that
+ * covers essentially the whole picture, e.g. the shirt behind a logo.
+ * Stitching that would sew a solid block, so its colour is treated as
+ * garment unless the user says otherwise. */
+function guessVectorBackground(shapes) {
+  if (!shapes || !shapes.length) return [];
+  function box(rings) {
+    var b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    rings.forEach(function (r) {
+      r.forEach(function (p) {
+        if (p[0] < b.x0) b.x0 = p[0]; if (p[0] > b.x1) b.x1 = p[0];
+        if (p[1] < b.y0) b.y0 = p[1]; if (p[1] > b.y1) b.y1 = p[1];
+      });
+    });
+    return b;
+  }
+  function area(b) { return Math.max(0, b.x1 - b.x0) * Math.max(0, b.y1 - b.y0); }
+
+  var all = [];
+  shapes.forEach(function (s) { s.rings.forEach(function (r) { all.push(r); }); });
+  var total = area(box(all));
+  if (total <= 0) return [];
+
+  var key = rgbKey(shapes[0].rgb);
+
+  /* Only a genuine backdrop qualifies, and all three must hold:
+   *   - it is painted first and covers essentially the whole picture
+   *   - nothing else shares its colour (or we would delete real content)
+   *   - something is left to stitch afterwards
+   * Otherwise a drawing made of a single shape would produce nothing. */
+  if (area(box(shapes[0].rings)) < total * 0.9) return [];
+  var others = shapes.filter(function (s, i) { return i > 0 && rgbKey(s.rgb) !== key; });
+  var sameColour = shapes.filter(function (s, i) { return i > 0 && rgbKey(s.rgb) === key; });
+  if (sameColour.length || !others.length) return [];
+  return [key];
+}
+
 function planShapes(shapes, userOpt) {
   var opt = Object.assign({}, DEFAULTS, userOpt || {});
   var notes = [], THIN_MM = opt.thinWarnMm || 1.2;
+  var skip = opt.skipColours || guessVectorBackground(shapes);
 
-  /* scale so the artwork ends up the requested finished width */
+  /* Scale so the STITCHED artwork ends up the requested finished width.
+   * The garment backdrop is excluded from the measurement, or asking for
+   * 150 mm would give a smaller design floating inside a 150 mm square. */
+  var measured = shapes.filter(function (s) { return skip.indexOf(rgbKey(s.rgb)) < 0; });
+  if (!measured.length) measured = shapes;
   var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  shapes.forEach(function (s) {
+  measured.forEach(function (s) {
     s.rings.forEach(function (r) {
       r.forEach(function (p) {
         if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
@@ -1017,7 +1059,7 @@ function planShapes(shapes, userOpt) {
    * anything painted on top is also stitched on top */
   var byColour = {}, order = [];
   shapes.forEach(function (s) {
-    if (opt.skipColours && opt.skipColours.indexOf(rgbKey(s.rgb)) >= 0) return;
+    if (skip.indexOf(rgbKey(s.rgb)) >= 0) return;
     var key = rgbKey(s.rgb);
     if (!byColour[key]) { byColour[key] = { rgb: s.rgb, regions: [], areaMm2: 0 }; order.push(key); }
     /* group rings shape by shape: two separate dots inside a ring are not
@@ -1048,7 +1090,7 @@ function planShapes(shapes, userOpt) {
 
   generateRuns(blocks, opt);
   return { blocks: blocks.filter(function (b) { return b.runs.length; }),
-           notes: notes, vector: true, mmPerUnit: scale, opt: opt };
+           notes: notes, vector: true, mmPerUnit: scale, skipColours: skip, opt: opt };
 }
 
 function rgbKey(rgb) { return rgb[0] + ',' + rgb[1] + ',' + rgb[2]; }
@@ -1290,7 +1332,7 @@ var API = {
   traceContours: traceContours, simplify: simplify, signedArea: signedArea,
   pointInPoly: pointInPoly, ringLength: ringLength, maskToRegions: maskToRegions,
   fillRegion: fillRegion, runningStitch: runningStitch, splitRun: splitRun, enforceMaxStitch: enforceMaxStitch,
-  planDesign: planDesign, planShapes: planShapes, generateRuns: generateRuns,
+  planDesign: planDesign, planShapes: planShapes, guessVectorBackground: guessVectorBackground, generateRuns: generateRuns,
   groupRings: groupRings, describeRegion: describeRegion, rgbKey: rgbKey,
   buildStitches: buildStitches,
   encodeJEF: encodeJEF, decodeJEF: decodeJEF, summarise: summarise,
