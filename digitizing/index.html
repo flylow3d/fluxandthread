@@ -58,6 +58,10 @@
   .note .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
                margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.2); }
   .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+  .match { font-size: 11.5px; margin-top: 2px; }
+  .match.good { color: #2b7a3f; }
+  .match.fair { color: var(--warn); }
+  .match.poor { color: var(--err); font-weight: 600; }
   #busy { display: none; color: var(--accent); font-size: 13.5px; margin-top: 8px; }
   #busy.on { display: block; }
 </style>
@@ -75,10 +79,12 @@
     <div class="card">
       <h2>1 &nbsp;Your picture</h2>
       <div id="drop">
-        <b>Drop a picture here</b><br>or click to choose &middot; or press Ctrl&#8209;V to paste a screenshot
+        <b>Drop a picture or an SVG here</b><br>or click to choose &middot; or press Ctrl&#8209;V to paste a screenshot
       </div>
-      <input type="file" id="file" accept="image/*" hidden>
+      <input type="file" id="file" accept="image/*,.svg,image/svg+xml" hidden>
       <div class="hint" id="imginfo"></div>
+      <div class="hint">An <b>SVG</b> gives much better results than a photo or screenshot:
+        the shapes and colours are exact, so nothing has to be guessed.</div>
     </div>
 
     <div class="card">
@@ -296,6 +302,20 @@ function nearestThread(rgb, exclude) {
     if (d < bestD) { bestD = d; best = i; }
   }
   return best;
+}
+
+/* How far a colour is from a given thread, as CIE deltaE. Rough guide:
+ * under 5 is all but indistinguishable, under 12 reads as the same colour,
+ * past ~18 it is visibly a different colour and worth choosing by hand. */
+function threadDistance(rgb, index) {
+  return Math.sqrt(labDist(srgbToLab(rgb[0], rgb[1], rgb[2]), index));
+}
+
+function matchQuality(deltaE) {
+  if (deltaE < 6)  return { word: 'excellent match', level: 'good' };
+  if (deltaE < 12) return { word: 'good match', level: 'good' };
+  if (deltaE < 18) return { word: 'fair match', level: 'fair' };
+  return { word: 'not close — pick a spool you own', level: 'poor' };
 }
 
 function threadInfo(i) {
@@ -614,14 +634,12 @@ function simplify(poly, tol) {
 
 /* Turn a bitmap mask into regions (an outer ring plus any holes),
  * converting pixel coordinates to millimetres on the way out. */
-function maskToRegions(m, w, h, mmPerPx, simplifyPx) {
-  var loops = traceContours(m, w, h)
-    .map(function (l) { return simplify(l, simplifyPx); })
-    .filter(function (l) { return l.length >= 3 && Math.abs(signedArea(l)) > 1.0; });
-
+/* Sort a pile of closed rings into regions. A ring sitting inside an odd
+ * number of others is a hole; it belongs to the smallest ring that
+ * contains it. Used for both traced bitmaps and imported SVG paths. */
+function groupRings(loops) {
   var outers = [], holes = [];
   for (var i = 0; i < loops.length; i++) {
-    /* a loop is a hole when it sits inside an odd number of others */
     var depth = 0;
     for (var j = 0; j < loops.length; j++) {
       if (i === j) continue;
@@ -641,23 +659,34 @@ function maskToRegions(m, w, h, mmPerPx, simplifyPx) {
     }
     if (bestIdx >= 0) regions[bestIdx].holes.push(hl);
   });
+  return regions;
+}
+
+/* Attach the measurements the rest of the pipeline needs. */
+function describeRegion(outer, holes) {
+  var area = Math.abs(signedArea(outer));
+  var per  = ringLength(outer);
+  holes.forEach(function (hl) { area -= Math.abs(signedArea(hl)); per += ringLength(hl); });
+  area = Math.max(area, 0);
+  return {
+    outer: outer, holes: holes,
+    areaMm2: area, perimeterMm: per,
+    /* For a long thin shape, 2 x area / perimeter is very close to its
+     * stroke width. Anything under about 1.2 mm is finer than thread
+     * can hold, which is how we spot detail that will not stitch. */
+    avgWidthMm: per > 0 ? 2 * area / per : 0
+  };
+}
+
+function maskToRegions(m, w, h, mmPerPx, simplifyPx) {
+  var loops = traceContours(m, w, h)
+    .map(function (l) { return simplify(l, simplifyPx); })
+    .filter(function (l) { return l.length >= 3 && Math.abs(signedArea(l)) > 1.0; });
 
   function toMm(p) { return [p[0] * mmPerPx, p[1] * mmPerPx]; }
-  return regions.map(function (r) {
-    var outer = r.outer.map(toMm);
-    var holes = r.holes.map(function (hl) { return hl.map(toMm); });
-    var area = Math.abs(signedArea(outer));
-    var per  = ringLength(outer);
-    holes.forEach(function (hl) { area -= Math.abs(signedArea(hl)); per += ringLength(hl); });
-    area = Math.max(area, 0);
-    return {
-      outer: outer, holes: holes,
-      areaMm2: area, perimeterMm: per,
-      /* For a long thin shape, 2 x area / perimeter is very close to its
-       * stroke width. Anything under about 1.2 mm is finer than thread
-       * can hold, which is how we spot detail that will not stitch. */
-      avgWidthMm: per > 0 ? 2 * area / per : 0
-    };
+  return groupRings(loops).map(function (r) {
+    return describeRegion(r.outer.map(toMm),
+                          r.holes.map(function (hl) { return hl.map(toMm); }));
   });
 }
 
@@ -924,6 +953,16 @@ function planDesign(img, userOpt) {
     });
   }
 
+  generateRuns(blocks, opt);
+
+  return { blocks: blocks.filter(function (b) { return b.runs.length; }),
+           notes: notes, quantised: q, backgroundLabel: bg, backgroundLabels: bgList,
+           mmPerPx: mmPerPx, opt: opt };
+}
+
+/* Underlay, then the fill, then an optional outline — for every region of
+ * every colour. Shared by the bitmap and the SVG routes. */
+function generateRuns(blocks, opt) {
   blocks.forEach(function (bk, bi) {
     var angle = opt.angleDeg + bi * opt.angleStepDeg;
     bk.angleDeg = angle;
@@ -949,16 +988,75 @@ function planDesign(img, userOpt) {
       .map(function (r) { return enforceMaxStitch(r, opt.maxStitchMm); })
       .filter(function (r) { return r.length > 1; });
   });
-
-  return { blocks: blocks.filter(function (b) { return b.runs.length; }),
-           notes: notes, quantised: q, backgroundLabel: bg, backgroundLabels: bgList,
-           mmPerPx: mmPerPx, opt: opt };
+  return blocks;
 }
+
+/* ------------------------- the SVG route --------------------------- */
+/* Shapes come in from svg-import.js already flattened to polygons in the
+ * drawing's own units, with their real fill colours. Nothing has to be
+ * guessed: no colour clustering, no speckle cleanup, no tracing. */
+function planShapes(shapes, userOpt) {
+  var opt = Object.assign({}, DEFAULTS, userOpt || {});
+  var notes = [], THIN_MM = opt.thinWarnMm || 1.2;
+
+  /* scale so the artwork ends up the requested finished width */
+  var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  shapes.forEach(function (s) {
+    s.rings.forEach(function (r) {
+      r.forEach(function (p) {
+        if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+        if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+      });
+    });
+  });
+  if (!isFinite(x0)) return { blocks: [], notes: [{ kind: 'empty', text: 'Nothing in that drawing could be stitched.' }], opt: opt };
+  var scale = opt.widthMm / Math.max(x1 - x0, 1e-6);
+  function toMm(p) { return [(p[0] - x0) * scale, (p[1] - y0) * scale]; }
+
+  /* one block per distinct fill colour, kept in drawing order so that
+   * anything painted on top is also stitched on top */
+  var byColour = {}, order = [];
+  shapes.forEach(function (s) {
+    if (opt.skipColours && opt.skipColours.indexOf(rgbKey(s.rgb)) >= 0) return;
+    var key = rgbKey(s.rgb);
+    if (!byColour[key]) { byColour[key] = { rgb: s.rgb, regions: [], areaMm2: 0 }; order.push(key); }
+    /* group rings shape by shape: two separate dots inside a ring are not
+     * holes in it, but a letter's counter is */
+    groupRings(s.rings).forEach(function (reg) {
+      var d = describeRegion(reg.outer.map(toMm), reg.holes.map(function (h) { return h.map(toMm); }));
+      if (d.areaMm2 < opt.minAreaMm2) return;
+      byColour[key].regions.push(d);
+      byColour[key].areaMm2 += d.areaMm2;
+    });
+  });
+
+  var blocks = [];
+  order.forEach(function (key) {
+    var b = byColour[key];
+    if (!b.regions.length) return;
+    var thin = b.regions.filter(function (r) { return r.avgWidthMm < THIN_MM; }).length;
+    if (thin) {
+      notes.push({ kind: 'thin', rgb: b.rgb, count: thin,
+        text: thin + ' shape(s) of this colour are thinner than ' + THIN_MM.toFixed(1) +
+              ' mm. Thread cannot hold detail that fine — make the design bigger or simplify it.' });
+    }
+    blocks.push({
+      label: key, rgb: b.rgb, regions: b.regions, areaMm2: b.areaMm2,
+      thread: (opt.threadOverride && opt.threadOverride[key]) || nearestThread(b.rgb)
+    });
+  });
+
+  generateRuns(blocks, opt);
+  return { blocks: blocks.filter(function (b) { return b.runs.length; }),
+           notes: notes, vector: true, mmPerUnit: scale, opt: opt };
+}
+
+function rgbKey(rgb) { return rgb[0] + ',' + rgb[1] + ',' + rgb[2]; }
 
 /* Order the runs inside each colour so the needle takes short hops,
  * then emit the flat command list the .jef writer consumes. */
 function buildStitches(plan) {
-  var out = [], threads = [], cur = [0, 0], first = true;
+  var out = [], threads = [], cur = [0, 0], first = true, started = false;
 
   plan.blocks.forEach(function (bk) {
     threads.push(bk.thread);
@@ -978,10 +1076,15 @@ function buildStitches(plan) {
       var run = pool.splice(bi, 1)[0];
       if (rev) run = run.slice().reverse();
 
-      if (bd > 0.001) {
+      /* The needle begins at the centre of the hoop, which is nowhere near
+       * the design's own origin, so the very first move MUST be a jump.
+       * Without this the machine sews a long line across the fabric from
+       * the centre to wherever the design starts. */
+      if (bd > 0.001 || !started) {
         if (plan.opt.trims && bd > 4) out.push({ x: cur[0], y: cur[1], cmd: 'trim' });
         out.push({ x: run[0][0], y: run[0][1], cmd: 'jump' });
       }
+      started = true;
       for (var s = 0; s < run.length; s++) out.push({ x: run[s][0], y: run[s][1], cmd: 'stitch' });
       cur = run[run.length - 1];
     }
@@ -1180,13 +1283,16 @@ function summarise(built) {
 
 var API = {
   JEF_THREADS: JEF_THREADS, nearestThread: nearestThread, threadInfo: threadInfo,
-  colourDist: colourDist, quantise: quantise, guessBackground: guessBackground, backgroundGroup: backgroundGroup, srgbToLab: srgbToLab,
+  colourDist: colourDist, threadDistance: threadDistance, matchQuality: matchQuality,
+  quantise: quantise, guessBackground: guessBackground, backgroundGroup: backgroundGroup, srgbToLab: srgbToLab,
   maskFor: maskFor, dilate: dilate, erode: erode, openMask: openMask, closeMask: closeMask,
   dilateN: dilateN, erodeN: erodeN, dropSpecks: dropSpecks,
   traceContours: traceContours, simplify: simplify, signedArea: signedArea,
   pointInPoly: pointInPoly, ringLength: ringLength, maskToRegions: maskToRegions,
   fillRegion: fillRegion, runningStitch: runningStitch, splitRun: splitRun, enforceMaxStitch: enforceMaxStitch,
-  planDesign: planDesign, buildStitches: buildStitches,
+  planDesign: planDesign, planShapes: planShapes, generateRuns: generateRuns,
+  groupRings: groupRings, describeRegion: describeRegion, rgbKey: rgbKey,
+  buildStitches: buildStitches,
   encodeJEF: encodeJEF, decodeJEF: decodeJEF, summarise: summarise,
   jefHoopCode: jefHoopCode, DEFAULTS: DEFAULTS
 };
@@ -1198,12 +1304,515 @@ root.Stitcher = API;
 
 </script>
 <script>
+/* svg-import.js, inlined */
+/* svg-import.js — read an SVG into flat coloured outlines.
+ *
+ * An SVG already holds exact shapes and exact colours, so none of the
+ * pixel guesswork applies: no colour clustering, no anti-aliasing
+ * cleanup, no tracing. We just flatten the curves into polygons.
+ *
+ * Deliberately self-contained — its own small XML parser and its own
+ * path maths — so it behaves identically in the browser and in Node,
+ * and so the tests can run without a DOM.
+ *
+ * Output: { shapes: [ { rings: [[[x,y],...],...], rgb:[r,g,b] } ], notes: [] }
+ * Rings are in SVG user units, y downward, transforms already applied.
+ */
+(function (root) {
+'use strict';
+
+/* ------------------------------ XML ------------------------------- */
+/* Small on purpose. Real SVG files are well-formed XML; this handles
+ * tags, attributes, self-closing elements, comments, CDATA and text. */
+function parseXML(src) {
+  var pos = 0, root_ = { tag: '#root', attrs: {}, children: [], text: '' };
+  var stack = [root_];
+
+  function top() { return stack[stack.length - 1]; }
+
+  while (pos < src.length) {
+    var lt = src.indexOf('<', pos);
+    if (lt < 0) break;
+    if (lt > pos) {
+      var txt = src.slice(pos, lt);
+      if (txt.trim()) top().text += txt;
+    }
+    if (src.substr(lt, 4) === '<!--') { pos = src.indexOf('-->', lt); pos = pos < 0 ? src.length : pos + 3; continue; }
+    if (src.substr(lt, 9) === '<![CDATA[') {
+      var ce = src.indexOf(']]>', lt);
+      top().text += src.slice(lt + 9, ce < 0 ? src.length : ce);
+      pos = ce < 0 ? src.length : ce + 3; continue;
+    }
+    if (src.substr(lt, 2) === '<?' || src.substr(lt, 2) === '<!') {
+      pos = src.indexOf('>', lt); pos = pos < 0 ? src.length : pos + 1; continue;
+    }
+    var gt = findTagEnd(src, lt);
+    if (gt < 0) break;
+    var inner = src.slice(lt + 1, gt);
+    pos = gt + 1;
+
+    if (inner[0] === '/') {                       /* closing tag */
+      if (stack.length > 1) stack.pop();
+      continue;
+    }
+    var selfClose = /\/\s*$/.test(inner);
+    if (selfClose) inner = inner.replace(/\/\s*$/, '');
+    var m = /^([A-Za-z_][\w.:-]*)/.exec(inner);
+    if (!m) continue;
+    var node = { tag: stripNS(m[1]), attrs: parseAttrs(inner.slice(m[1].length)), children: [], text: '' };
+    top().children.push(node);
+    if (!selfClose) stack.push(node);
+  }
+  return root_;
+}
+
+/* '>' inside an attribute value must not end the tag */
+function findTagEnd(src, from) {
+  var q = null;
+  for (var i = from + 1; i < src.length; i++) {
+    var c = src[i];
+    if (q) { if (c === q) q = null; continue; }
+    if (c === '"' || c === "'") { q = c; continue; }
+    if (c === '>') return i;
+  }
+  return -1;
+}
+
+function stripNS(name) { var i = name.indexOf(':'); return i < 0 ? name : name.slice(i + 1); }
+
+function parseAttrs(s) {
+  var out = {}, re = /([A-Za-z_][\w.:-]*)\s*=\s*("([^"]*)"|'([^']*)')/g, m;
+  while ((m = re.exec(s))) out[stripNS(m[1])] = decodeEntities(m[3] !== undefined ? m[3] : m[4]);
+  return out;
+}
+
+function decodeEntities(s) {
+  return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+          .replace(/&apos;/g, "'").replace(/&#(\d+);/g, function (_, d) { return String.fromCharCode(+d); })
+          .replace(/&amp;/g, '&');
+}
+
+/* --------------------------- transforms ---------------------------- */
+/* 2x3 affine as [a,b,c,d,e,f], the same order SVG uses. */
+var IDENT = [1, 0, 0, 1, 0, 0];
+
+function matMul(m, n) {
+  return [
+    m[0] * n[0] + m[2] * n[1],          m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3],          m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4],   m[1] * n[4] + m[3] * n[5] + m[5]
+  ];
+}
+
+function applyMat(m, p) {
+  return [m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5]];
+}
+
+function parseTransform(str) {
+  if (!str) return IDENT;
+  var out = IDENT, re = /([a-zA-Z]+)\s*\(([^)]*)\)/g, m;
+  while ((m = re.exec(str))) {
+    var fn = m[1], a = m[2].split(/[\s,]+/).filter(function (t) { return t.length; }).map(Number);
+    var t = IDENT;
+    if (fn === 'matrix' && a.length >= 6) t = [a[0], a[1], a[2], a[3], a[4], a[5]];
+    else if (fn === 'translate') t = [1, 0, 0, 1, a[0] || 0, a.length > 1 ? a[1] : 0];
+    else if (fn === 'scale') t = [a[0] || 0, 0, 0, (a.length > 1 ? a[1] : a[0]) || 0, 0, 0];
+    else if (fn === 'rotate') {
+      var r = (a[0] || 0) * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+      t = [c, s, -s, c, 0, 0];
+      if (a.length >= 3) t = matMul(matMul([1, 0, 0, 1, a[1], a[2]], t), [1, 0, 0, 1, -a[1], -a[2]]);
+    }
+    else if (fn === 'skewX') t = [1, 0, Math.tan((a[0] || 0) * Math.PI / 180), 1, 0, 0];
+    else if (fn === 'skewY') t = [1, Math.tan((a[0] || 0) * Math.PI / 180), 0, 1, 0, 0];
+    out = matMul(out, t);
+  }
+  return out;
+}
+
+/* ------------------------------ colour ----------------------------- */
+
+var NAMED = {
+  black: [0,0,0], white: [255,255,255], red: [255,0,0], green: [0,128,0], lime: [0,255,0],
+  blue: [0,0,255], yellow: [255,255,0], cyan: [0,255,255], aqua: [0,255,255],
+  magenta: [255,0,255], fuchsia: [255,0,255], gray: [128,128,128], grey: [128,128,128],
+  silver: [192,192,192], maroon: [128,0,0], olive: [128,128,0], navy: [0,0,128],
+  purple: [128,0,128], teal: [0,128,128], orange: [255,165,0], pink: [255,192,203],
+  brown: [165,42,42], gold: [255,215,0], ivory: [255,255,240], beige: [245,245,220],
+  tan: [210,180,140], coral: [255,127,80], salmon: [250,128,114], khaki: [240,230,140],
+  indigo: [75,0,130], violet: [238,130,238], crimson: [220,20,60], turquoise: [64,224,208]
+};
+
+function parseColour(s) {
+  if (!s) return null;
+  s = String(s).trim().toLowerCase();
+  if (!s || s === 'none' || s === 'transparent' || s === 'currentcolor') return null;
+  if (s.indexOf('url(') === 0) return null;              /* gradient or pattern */
+  if (s[0] === '#') {
+    var h = s.slice(1);
+    if (h.length === 3) return [parseInt(h[0] + h[0], 16), parseInt(h[1] + h[1], 16), parseInt(h[2] + h[2], 16)];
+    if (h.length === 6) return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    return null;
+  }
+  var m = /^rgba?\(([^)]+)\)/.exec(s);
+  if (m) {
+    var p = m[1].split(/[\s,\/]+/).filter(function (t) { return t.length; });
+    function chan(v) { return v.indexOf('%') >= 0 ? Math.round(parseFloat(v) * 2.55) : Math.round(parseFloat(v)); }
+    if (p.length >= 3) return [chan(p[0]), chan(p[1]), chan(p[2])];
+    return null;
+  }
+  return NAMED[s] || null;
+}
+
+/* --------------------------- style / CSS --------------------------- */
+/* Enough to read the class rules that Illustrator and Figma emit,
+ * e.g.  .cls-1 { fill: #ff6600 }  */
+function parseCSS(text) {
+  var rules = {}, re = /([^{}]+)\{([^}]*)\}/g, m;
+  while ((m = re.exec(text))) {
+    var decls = {};
+    m[2].split(';').forEach(function (d) {
+      var i = d.indexOf(':');
+      if (i > 0) decls[d.slice(0, i).trim().toLowerCase()] = d.slice(i + 1).trim();
+    });
+    m[1].split(',').forEach(function (sel) {
+      sel = sel.trim();
+      if (sel) {
+        rules[sel] = rules[sel] || {};
+        for (var k in decls) rules[sel][k] = decls[k];
+      }
+    });
+  }
+  return rules;
+}
+
+function parseStyleAttr(s) {
+  var out = {};
+  if (!s) return out;
+  s.split(';').forEach(function (d) {
+    var i = d.indexOf(':');
+    if (i > 0) out[d.slice(0, i).trim().toLowerCase()] = d.slice(i + 1).trim();
+  });
+  return out;
+}
+
+/* ---------------------------- path maths --------------------------- */
+
+function flattenCubic(p0, p1, p2, p3, tol, out) {
+  var d = dist(p0, p1) + dist(p1, p2) + dist(p2, p3);
+  var n = Math.max(2, Math.min(240, Math.ceil(d / Math.max(tol, 1e-6))));
+  for (var i = 1; i <= n; i++) {
+    var t = i / n, u = 1 - t;
+    out.push([
+      u*u*u*p0[0] + 3*u*u*t*p1[0] + 3*u*t*t*p2[0] + t*t*t*p3[0],
+      u*u*u*p0[1] + 3*u*u*t*p1[1] + 3*u*t*t*p2[1] + t*t*t*p3[1]
+    ]);
+  }
+}
+
+function flattenQuad(p0, p1, p2, tol, out) {
+  flattenCubic(p0,
+    [p0[0] + 2/3*(p1[0]-p0[0]), p0[1] + 2/3*(p1[1]-p0[1])],
+    [p2[0] + 2/3*(p1[0]-p2[0]), p2[1] + 2/3*(p1[1]-p2[1])],
+    p2, tol, out);
+}
+
+function dist(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
+
+/* Endpoint parameterisation -> centre parameterisation, per the SVG spec. */
+function flattenArc(p0, rx, ry, rot, largeArc, sweep, p1, tol, out) {
+  if (rx === 0 || ry === 0) { out.push(p1); return; }
+  rx = Math.abs(rx); ry = Math.abs(ry);
+  var phi = rot * Math.PI / 180, cp = Math.cos(phi), sp = Math.sin(phi);
+  var dx2 = (p0[0] - p1[0]) / 2, dy2 = (p0[1] - p1[1]) / 2;
+  var x1 =  cp * dx2 + sp * dy2, y1 = -sp * dx2 + cp * dy2;
+
+  var lam = (x1*x1)/(rx*rx) + (y1*y1)/(ry*ry);
+  if (lam > 1) { var s = Math.sqrt(lam); rx *= s; ry *= s; }
+
+  var sign = (largeArc !== sweep) ? 1 : -1;
+  var num = rx*rx*ry*ry - rx*rx*y1*y1 - ry*ry*x1*x1;
+  var den = rx*rx*y1*y1 + ry*ry*x1*x1;
+  var co = sign * Math.sqrt(Math.max(0, num / (den || 1e-12)));
+  var cx1 = co * rx * y1 / ry, cy1 = -co * ry * x1 / rx;
+  var cx = cp * cx1 - sp * cy1 + (p0[0] + p1[0]) / 2;
+  var cy = sp * cx1 + cp * cy1 + (p0[1] + p1[1]) / 2;
+
+  function ang(ux, uy, vx, vy) {
+    var d = (ux*vx + uy*vy) / (Math.hypot(ux,uy) * Math.hypot(vx,vy));
+    var a = Math.acos(Math.max(-1, Math.min(1, d)));
+    return (ux*vy - uy*vx < 0) ? -a : a;
+  }
+  var th0 = ang(1, 0, (x1-cx1)/rx, (y1-cy1)/ry);
+  var dth = ang((x1-cx1)/rx, (y1-cy1)/ry, (-x1-cx1)/rx, (-y1-cy1)/ry);
+  if (!sweep && dth > 0) dth -= 2*Math.PI;
+  if (sweep && dth < 0) dth += 2*Math.PI;
+
+  var n = Math.max(2, Math.min(240, Math.ceil(Math.abs(dth) * Math.max(rx, ry) / Math.max(tol, 1e-6))));
+  for (var i = 1; i <= n; i++) {
+    var th = th0 + dth * i / n;
+    var xr = rx * Math.cos(th), yr = ry * Math.sin(th);
+    out.push([cp*xr - sp*yr + cx, sp*xr + cp*yr + cy]);
+  }
+}
+
+/* Parse a `d` attribute into closed rings of points. */
+function parsePath(d, tol) {
+  tol = tol || 0.25;
+  var toks = String(d).match(/[MmLlHhVvCcSsQqTtAaZz]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) || [];
+  var i = 0, rings = [], cur = null, pt = [0, 0], start = [0, 0], cmd = null;
+  var lastC = null, lastQ = null;
+
+  function num() { return parseFloat(toks[i++]); }
+  function flag() { var t = toks[i++]; return t === '1' || parseFloat(t) === 1; }
+  function begin() { if (cur && cur.length > 1) rings.push(cur); cur = [pt.slice()]; }
+
+  while (i < toks.length) {
+    if (/[A-Za-z]/.test(toks[i])) { cmd = toks[i++]; }
+    else if (cmd === 'M') cmd = 'L';
+    else if (cmd === 'm') cmd = 'l';
+    if (cmd === undefined || cmd === null) break;
+    var rel = cmd === cmd.toLowerCase();
+    var base = rel ? pt : [0, 0];
+
+    switch (cmd.toUpperCase()) {
+      case 'M':
+        pt = [base[0] + num(), base[1] + num()];
+        begin(); start = pt.slice(); lastC = lastQ = null;
+        break;
+      case 'L':
+        pt = [base[0] + num(), base[1] + num()];
+        cur.push(pt.slice()); lastC = lastQ = null;
+        break;
+      case 'H':
+        pt = [(rel ? pt[0] : 0) + num(), pt[1]];
+        cur.push(pt.slice()); lastC = lastQ = null;
+        break;
+      case 'V':
+        pt = [pt[0], (rel ? pt[1] : 0) + num()];
+        cur.push(pt.slice()); lastC = lastQ = null;
+        break;
+      case 'C': {
+        var c1 = [base[0] + num(), base[1] + num()];
+        var c2 = [base[0] + num(), base[1] + num()];
+        var e  = [base[0] + num(), base[1] + num()];
+        flattenCubic(pt, c1, c2, e, tol, cur); pt = e; lastC = c2; lastQ = null;
+        break;
+      }
+      case 'S': {
+        var r1 = lastC ? [2*pt[0] - lastC[0], 2*pt[1] - lastC[1]] : pt.slice();
+        var r2 = [base[0] + num(), base[1] + num()];
+        var re_ = [base[0] + num(), base[1] + num()];
+        flattenCubic(pt, r1, r2, re_, tol, cur); pt = re_; lastC = r2; lastQ = null;
+        break;
+      }
+      case 'Q': {
+        var q1 = [base[0] + num(), base[1] + num()];
+        var qe = [base[0] + num(), base[1] + num()];
+        flattenQuad(pt, q1, qe, tol, cur); pt = qe; lastQ = q1; lastC = null;
+        break;
+      }
+      case 'T': {
+        var t1 = lastQ ? [2*pt[0] - lastQ[0], 2*pt[1] - lastQ[1]] : pt.slice();
+        var te = [base[0] + num(), base[1] + num()];
+        flattenQuad(pt, t1, te, tol, cur); pt = te; lastQ = t1; lastC = null;
+        break;
+      }
+      case 'A': {
+        var rx = num(), ry = num(), rot = num(), la = flag(), sw = flag();
+        var ae = [base[0] + num(), base[1] + num()];
+        flattenArc(pt, rx, ry, rot, la, sw, ae, tol, cur); pt = ae; lastC = lastQ = null;
+        break;
+      }
+      case 'Z':
+        if (cur && cur.length > 1) { rings.push(cur); }
+        pt = start.slice(); cur = [pt.slice()]; lastC = lastQ = null;
+        break;
+      default:
+        i++;   /* unknown command: skip a token and carry on */
+    }
+    if (!cur) cur = [pt.slice()];
+  }
+  if (cur && cur.length > 2) rings.push(cur);
+  return rings;
+}
+
+/* ------------------------- primitive shapes ------------------------ */
+
+function num(v, dflt) { var n = parseFloat(v); return isNaN(n) ? (dflt || 0) : n; }
+
+function ellipseRing(cx, cy, rx, ry, tol) {
+  var n = Math.max(12, Math.min(400, Math.ceil(2 * Math.PI * Math.max(rx, ry) / Math.max(tol, 1e-6))));
+  var out = [];
+  for (var i = 0; i < n; i++) {
+    var t = i / n * 2 * Math.PI;
+    out.push([cx + rx * Math.cos(t), cy + ry * Math.sin(t)]);
+  }
+  return out;
+}
+
+function shapeRings(node, tol) {
+  var a = node.attrs;
+  switch (node.tag) {
+    case 'path':    return parsePath(a.d || '', tol);
+    case 'rect': {
+      var x = num(a.x), y = num(a.y), w = num(a.width), h = num(a.height);
+      if (w <= 0 || h <= 0) return [];
+      var rx = Math.min(num(a.rx, num(a.ry)), w / 2), ry = Math.min(num(a.ry, num(a.rx)), h / 2);
+      if (rx > 0 && ry > 0) {
+        var d = 'M' + (x+rx) + ',' + y + 'H' + (x+w-rx) +
+                'A' + rx + ',' + ry + ' 0 0 1 ' + (x+w) + ',' + (y+ry) +
+                'V' + (y+h-ry) + 'A' + rx + ',' + ry + ' 0 0 1 ' + (x+w-rx) + ',' + (y+h) +
+                'H' + (x+rx) + 'A' + rx + ',' + ry + ' 0 0 1 ' + x + ',' + (y+h-ry) +
+                'V' + (y+ry) + 'A' + rx + ',' + ry + ' 0 0 1 ' + (x+rx) + ',' + y + 'Z';
+        return parsePath(d, tol);
+      }
+      return [[[x, y], [x+w, y], [x+w, y+h], [x, y+h]]];
+    }
+    case 'circle': {
+      var r = num(a.r); if (r <= 0) return [];
+      return [ellipseRing(num(a.cx), num(a.cy), r, r, tol)];
+    }
+    case 'ellipse': {
+      var ex = num(a.rx), ey = num(a.ry); if (ex <= 0 || ey <= 0) return [];
+      return [ellipseRing(num(a.cx), num(a.cy), ex, ey, tol)];
+    }
+    case 'polygon':
+    case 'polyline': {
+      var nums = (a.points || '').split(/[\s,]+/).filter(function (t) { return t.length; }).map(Number);
+      var pts = [];
+      for (var i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
+      return pts.length > 2 ? [pts] : [];
+    }
+    default: return [];
+  }
+}
+
+/* ------------------------------ walk ------------------------------- */
+
+var SHAPES = { path: 1, rect: 1, circle: 1, ellipse: 1, polygon: 1, polyline: 1 };
+var SKIP_CONTAINERS = { defs: 1, clipPath: 1, mask: 1, marker: 1, symbol: 1, pattern: 1, filter: 1 };
+
+function importSVG(source, opt) {
+  opt = opt || {};
+  var doc = parseXML(String(source));
+  var svg = findTag(doc, 'svg');
+  if (!svg) return { shapes: [], notes: [{ kind: 'error', text: 'That file does not look like an SVG.' }] };
+
+  var css = {};
+  collect(svg, 'style').forEach(function (s) {
+    var r = parseCSS(s.text || '');
+    for (var k in r) css[k] = r[k];
+  });
+
+  var notes = [], shapes = [], warned = {};
+  function warn(kind, text) { if (!warned[kind]) { warned[kind] = 1; notes.push({ kind: kind, text: text }); } }
+
+  var tol = opt.curveTolerance || 0.2;
+
+  function styleOf(node, inherited) {
+    var out = {};
+    for (var k in inherited) out[k] = inherited[k];
+    /* class rules, then presentation attributes, then the style attribute */
+    (node.attrs['class'] || '').split(/\s+/).forEach(function (c) {
+      if (!c) return;
+      var r = css['.' + c];
+      if (r) for (var k in r) out[k] = r[k];
+    });
+    if (css[node.tag]) for (var k2 in css[node.tag]) out[k2] = css[node.tag][k2];
+    ['fill', 'fill-opacity', 'opacity', 'display', 'fill-rule'].forEach(function (p) {
+      if (node.attrs[p] !== undefined) out[p] = node.attrs[p];
+    });
+    var st = parseStyleAttr(node.attrs.style);
+    for (var k3 in st) out[k3] = st[k3];
+    return out;
+  }
+
+  function walk(node, mat, inherited) {
+    for (var i = 0; i < node.children.length; i++) {
+      var ch = node.children[i];
+      if (SKIP_CONTAINERS[ch.tag]) continue;
+      if (ch.tag === 'style' || ch.tag === 'title' || ch.tag === 'desc' || ch.tag === 'metadata') continue;
+
+      var st = styleOf(ch, inherited);
+      if ((st.display || '').trim() === 'none') continue;
+      if (parseFloat(st.opacity) === 0 || parseFloat(st['fill-opacity']) === 0) continue;
+
+      var m = matMul(mat, parseTransform(ch.attrs.transform));
+
+      if (ch.tag === 'text' || ch.tag === 'tspan') {
+        warn('text', 'This SVG contains live text. Lettering has to be converted to outlines ' +
+                     'before it can be stitched — in your drawing program, select the text and ' +
+                     'use "Convert to outlines" (or "Object to Path"), then save again.');
+        continue;
+      }
+      if (ch.tag === 'image') { warn('image', 'This SVG has a photo embedded in it, which was skipped. Only drawn shapes can be stitched.'); continue; }
+      if (ch.tag === 'use')   { warn('use', 'This SVG re-uses shapes with <use>, which is not supported yet. Those parts were skipped.'); continue; }
+
+      if (SHAPES[ch.tag]) {
+        var raw = st.fill;
+        if (raw === undefined) raw = '#000000';            /* SVG default fill is black */
+        if (String(raw).trim().toLowerCase().indexOf('url(') === 0) {
+          warn('gradient', 'Some shapes use a gradient or pattern fill. Embroidery cannot blend ' +
+                           'colours, so those shapes were skipped — flatten them to solid colours first.');
+          continue;
+        }
+        var rgb = parseColour(raw);
+        if (!rgb) continue;                                 /* fill:none — outline only */
+        var rings = shapeRings(ch, tol)
+          .map(function (r) { return r.map(function (p) { return applyMat(m, p); }); })
+          .filter(function (r) { return r.length > 2; });
+        if (rings.length) shapes.push({ rings: rings, rgb: rgb, fillRule: (st['fill-rule'] || 'nonzero').trim() });
+        continue;
+      }
+      walk(ch, m, st);                                      /* <g> and anything else */
+    }
+  }
+
+  walk(svg, IDENT, {});
+  if (!shapes.length && !notes.length) {
+    notes.push({ kind: 'empty', text: 'No filled shapes were found in that SVG.' });
+  }
+  return { shapes: shapes, notes: notes };
+}
+
+function findTag(node, tag) {
+  if (node.tag === tag) return node;
+  for (var i = 0; i < node.children.length; i++) {
+    var r = findTag(node.children[i], tag);
+    if (r) return r;
+  }
+  return null;
+}
+
+function collect(node, tag, out) {
+  out = out || [];
+  if (node.tag === tag) out.push(node);
+  node.children.forEach(function (c) { collect(c, tag, out); });
+  return out;
+}
+
+var API = {
+  importSVG: importSVG, parseXML: parseXML, parsePath: parsePath,
+  parseTransform: parseTransform, parseColour: parseColour, parseCSS: parseCSS,
+  matMul: matMul, applyMat: applyMat, shapeRings: shapeRings
+};
+
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+root.SvgImport = API;
+
+})(typeof self !== 'undefined' ? self : this);
+
+</script>
+<script>
 (function () {
 'use strict';
 var S = window.Stitcher;
 var $ = function (id) { return document.getElementById(id); };
 
+var mode = null;         /* 'bitmap' (png/screenshot) or 'vector' (svg) */
 var img = null;          /* ImageData, already scaled down for speed */
+var shapes = null;       /* imported SVG outlines */
+var svgNotes = [];
 var srcName = 'design';
 var quant = null;        /* cached quantisation, keyed by colour count */
 var quantK = -1;
@@ -1236,6 +1845,10 @@ window.addEventListener('paste', function (e) {
 
 function loadFile(file, name) {
   srcName = (name || file.name || 'design').replace(/\.[^.]+$/, '');
+
+  var isSvg = /svg/i.test(file.type || '') || /\.svg$/i.test(file.name || '');
+  if (isSvg) { loadSVG(file); return; }
+
   var url = URL.createObjectURL(file);
   var im = new Image();
   im.onload = function () {
@@ -1249,6 +1862,7 @@ function loadFile(file, name) {
     URL.revokeObjectURL(url);
     $('imginfo').textContent = im.width + ' × ' + im.height + ' pixels' +
       (scale < 1 ? '  (working at ' + w + ' × ' + h + ')' : '');
+    mode = 'bitmap'; shapes = null; svgNotes = [];
     quantK = -1; overrides = {}; bgSet = [];
     recolour(); redo();
   };
@@ -1256,26 +1870,71 @@ function loadFile(file, name) {
   im.src = url;
 }
 
+/* An SVG already holds exact shapes and exact colours, so it skips the
+ * colour-guessing entirely and goes straight to outlines. */
+function loadSVG(file) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    var res = SvgImport.importSVG(fr.result);
+    if (!res.shapes.length) {
+      shapes = null; mode = null;
+      $('imginfo').textContent = '';
+      $('notes').innerHTML = '<div class="note bad">' +
+        (res.notes[0] ? res.notes[0].text : 'No filled shapes were found in that SVG.') + '</div>';
+      $('clist').innerHTML = ''; $('save').disabled = true; $('savepng').disabled = true;
+      return;
+    }
+    mode = 'vector'; shapes = res.shapes; svgNotes = res.notes;
+    img = null; quant = null; quantK = -1; overrides = {}; bgSet = [];
+    var colours = {};
+    shapes.forEach(function (s) { colours[S.rgbKey(s.rgb)] = 1; });
+    $('imginfo').textContent = 'SVG — ' + shapes.length + ' shape' + (shapes.length === 1 ? '' : 's') +
+      ', ' + Object.keys(colours).length + ' colour' + (Object.keys(colours).length === 1 ? '' : 's') +
+      ' (exact, nothing guessed)';
+    recolour(); redo();
+  };
+  fr.onerror = function () { alert('That SVG could not be read.'); };
+  fr.readAsText(file);
+}
+
+/* The colour rows, from whichever source is loaded. */
+function paletteRows() {
+  if (mode === 'vector') {
+    var seen = {}, rows = [];
+    shapes.forEach(function (s) {
+      var key = S.rgbKey(s.rgb);
+      if (!seen[key]) { seen[key] = { label: key, rgb: s.rgb, weight: 0 }; rows.push(seen[key]); }
+      s.rings.forEach(function (r) { seen[key].weight += Math.abs(S.signedArea(r)); });
+    });
+    return rows;
+  }
+  if (!quant) return [];
+  return quant.palette.map(function (rgb, i) { return { label: i, rgb: rgb, weight: quant.counts[i] }; })
+    .filter(function (r) { return r.weight > 0; })
+    .sort(function (a, b) { return b.weight - a.weight; });
+}
+
 /* --------------------------- colour list --------------------------- */
 
 function recolour() {
-  if (!img) return;
-  var k = +$('k').value;
-  if (quantK !== k) {
-    quant = S.quantise(img, k); quantK = k;
-    /* a photographed shirt splits into several near-identical darks;
-     * tick them all as garment by default */
-    bgSet = S.backgroundGroup(quant);
-  }
+  if (mode === 'bitmap') {
+    if (!img) return;
+    var k = +$('k').value;
+    if (quantK !== k) {
+      quant = S.quantise(img, k); quantK = k;
+      /* a photographed shirt splits into several near-identical darks;
+       * tick them all as garment by default */
+      bgSet = S.backgroundGroup(quant);
+    }
+  } else if (mode !== 'vector') { return; }
+
+  /* an SVG carries its own exact colours — there is nothing to reduce */
+  $('k').disabled = (mode === 'vector');
+  $('kv').textContent = (mode === 'vector') ? 'exact' : $('k').value;
 
   var tb = $('clist'); tb.innerHTML = '';
-  /* biggest area first — the same order they will be sewn in */
-  var order = quant.palette.map(function (rgb, i) { return i; })
-    .filter(function (i) { return quant.counts[i] > 0; })
-    .sort(function (a, b) { return quant.counts[b] - quant.counts[a]; });
-
-  order.forEach(function (lab) {
-    var rgb = quant.palette[lab];
+  paletteRows().forEach(function (row) {
+    var lab = row.label, rgb = row.rgb;
     var hex = '#' + rgb.map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join('');
     var tr = document.createElement('tr');
 
@@ -1305,8 +1964,9 @@ function recolour() {
       var opts = [];
       for (var i = 1; i < S.JEF_THREADS.length; i++) opts.push(S.threadInfo(i));
       opts.sort(function (a, b) {
-        return S.colourDist(rgb[0], rgb[1], rgb[2], a.rgb[0], a.rgb[1], a.rgb[2]) -
-               S.colourDist(rgb[0], rgb[1], rgb[2], b.rgb[0], b.rgb[1], b.rgb[2]);
+        /* same measure the automatic pick uses, so the closest thread is
+         * always the one at the top of the list */
+        return S.threadDistance(rgb, a.index) - S.threadDistance(rgb, b.index);
       });
       opts.forEach(function (t) {
         var o = document.createElement('option');
@@ -1314,8 +1974,16 @@ function recolour() {
         if (t.index === chosen) o.selected = true;
         sel.appendChild(o);
       });
-      sel.onchange = function () { overrides[lab] = +sel.value; redo(); };
+      var q = document.createElement('div');
+      function showQuality() {
+        var m = S.matchQuality(S.threadDistance(rgb, +sel.value));
+        q.className = 'match ' + m.level;
+        q.textContent = m.word;
+      }
+      showQuality();
+      sel.onchange = function () { overrides[lab] = +sel.value; showQuality(); redo(); };
       td3.appendChild(sel);
+      td3.appendChild(q);
     }
     tr.appendChild(td3);
     tb.appendChild(tr);
@@ -1332,7 +2000,8 @@ function widthMm() {
 function options() {
   return {
     quantised: quant,
-    backgroundLabels: bgSet,
+    backgroundLabels: bgSet,   /* bitmap: cluster indices */
+    skipColours: bgSet,        /* vector: "r,g,b" keys */
     widthMm: widthMm(),
     colours: +$('k').value,
     spacingMm: (+$('dens').value) / 100,
@@ -1350,12 +2019,14 @@ function options() {
 
 var timer = null;
 function redo() {
-  if (!img) return;
+  if (!mode) return;
   clearTimeout(timer);
   $('busy').classList.add('on');
   timer = setTimeout(function () {
     try {
-      plan  = S.planDesign(img, options());
+      plan  = (mode === 'vector') ? S.planShapes(shapes, options())
+                                  : S.planDesign(img, options());
+      if (mode === 'vector' && svgNotes.length) plan.notes = svgNotes.concat(plan.notes);
       built = S.buildStitches(plan);
       lastBytes = built.threads.length ? S.encodeJEF(built, { trims: $('trim').checked }) : null;
     } catch (err) {
@@ -1374,7 +2045,7 @@ function redo() {
 ['w', 'unit', 'k', 'dens', 'maxst', 'ang', 'under', 'outl', 'trim', 'ovl', 'hoop', 'showjump']
   .forEach(function (id) {
     $(id).addEventListener('input', function () {
-      $('kv').textContent = $('k').value;
+      if (mode !== 'vector') $('kv').textContent = $('k').value;
       $('densv').textContent = ((+$('dens').value) / 100).toFixed(2);
       if (id === 'k') { recolour(); }
       redo();
@@ -1389,9 +2060,11 @@ function draw() {
 
   /* show it against the garment colour, so it reads the way it will look sewn */
   var bgc = '#2a2a2a';
-  if (quant && bgSet.length) {
-    var b = quant.palette[bgSet[0]];
-    bgc = 'rgb(' + b[0] + ',' + b[1] + ',' + b[2] + ')';
+  if (bgSet.length) {
+    /* bitmap labels are cluster indices; vector labels are "r,g,b" keys */
+    var b = (mode === 'vector') ? String(bgSet[0]).split(',').map(Number)
+                                : (quant && quant.palette[bgSet[0]]);
+    if (b && b.length === 3) bgc = 'rgb(' + b[0] + ',' + b[1] + ',' + b[2] + ')';
   }
   g.fillStyle = bgc; g.fillRect(0, 0, W, H);
   if (!plan || !built) return;
@@ -1463,8 +2136,12 @@ function showNotes() {
     plan.notes.forEach(function (n) {
       var key = n.kind + n.text;
       if (seen[key]) return; seen[key] = 1;
-      var hex = '#' + n.rgb.map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join('');
-      out.push('<div class="note"><span class="dot" style="background:' + hex + '"></span>' + n.text + '</div>');
+      var dot = '';
+      if (n.rgb) {
+        var hex = '#' + n.rgb.map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join('');
+        dot = '<span class="dot" style="background:' + hex + '"></span>';
+      }
+      out.push('<div class="note">' + dot + n.text + '</div>');
     });
   }
   if (built) {
