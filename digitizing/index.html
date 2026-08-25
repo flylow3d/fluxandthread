@@ -613,6 +613,14 @@ function pointInPoly(x, y, poly) {
   return inside;
 }
 
+/* Inside a shape made of an outer ring plus holes: odd number of
+ * crossings means inside, which handles holes without extra bookkeeping. */
+function insideRings(x, y, rings) {
+  var inside = false;
+  for (var r = 0; r < rings.length; r++) if (pointInPoly(x, y, rings[r])) inside = !inside;
+  return inside;
+}
+
 /* Ramer-Douglas-Peucker */
 function simplify(poly, tol) {
   if (poly.length < 4) return poly;
@@ -784,7 +792,9 @@ function fillRegion(region, opt) {
         cr += 1; cs = nxt;
       }
 
-      var pts = [], lastX = null;
+      var pts = [], lastX = null, lastY = null;
+      function flushRun() { if (pts.length > 1) runs.push(pts); pts = []; }
+
       for (var ci = 0; ci < chain.length; ci++) {
         var span = chain[ci];
         /* begin each row at whichever end sits closer to where the
@@ -793,14 +803,23 @@ function fillRegion(region, opt) {
         var from, to;
         if (lastX === null || Math.abs(span.a - lastX) <= Math.abs(span.b - lastX)) { from = span.a; to = span.b; }
         else { from = span.b; to = span.a; }
+
+        /* The hop from the previous row has to stay inside the shape. Two
+         * rows can overlap in x and still sit either side of a hole, and
+         * joining them would drag a thread straight across it. When that
+         * happens, end the run here so the machine jumps instead. */
+        if (lastX !== null &&
+            !insideRings((lastX + from) / 2, (lastY + span.y) / 2, rings)) {
+          flushRun();
+        }
         var xsSplit = splitRun(from, to, maxStit, (ci % 4) / 4);
         for (var xi = 0; xi < xsSplit.length; xi++) {
           /* rotate back out of scanline space */
           pts.push(rot([xsSplit[xi], span.y], co, si));
         }
-        lastX = to;
+        lastX = to; lastY = span.y;
       }
-      if (pts.length > 1) runs.push(pts);
+      flushRun();
     }
   }
   return runs;
@@ -1108,7 +1127,7 @@ function planShapes(input, userOpt) {
 
   /* one block per distinct fill colour, kept in drawing order so that
    * anything painted on top is also stitched on top */
-  var byColour = {}, order = [];
+  var byColour = {}, order = [], badShapes = 0;
   function block(rgb) {
     var key = rgbKey(rgb);
     if (!byColour[key]) { byColour[key] = { rgb: rgb, regions: [], lines: [], areaMm2: 0 }; order.push(key); }
@@ -1121,13 +1140,27 @@ function planShapes(input, userOpt) {
     block(s.rgb);
     /* group rings shape by shape: two separate dots inside a ring are not
      * holes in it, but a letter's counter is */
-    groupRings(s.rings).forEach(function (reg) {
+    var grouped = groupRings(s.rings);
+    if (!grouped.length && s.rings.length) {
+      /* every ring came out a hole with nothing to sit in — usually a shape
+       * whose outlines overlap in a way that leaves no filled area. Say so
+       * rather than quietly sewing nothing where a shape should be. */
+      badShapes++;
+    }
+    grouped.forEach(function (reg) {
       var d = describeRegion(reg.outer.map(toMm), reg.holes.map(function (h) { return h.map(toMm); }));
       if (d.areaMm2 < opt.minAreaMm2) return;
       byColour[key].regions.push(d);
       byColour[key].areaMm2 += d.areaMm2;
     });
   });
+
+  if (badShapes) {
+    notes.push({ kind: 'noarea', count: badShapes,
+      text: badShapes + ' shape(s) had outlines that overlap in a way that leaves no area ' +
+            'to fill, so nothing was stitched for them. Usually a shape drawn with its ' +
+            'inner and outer edges crossing — check it in your drawing program.' });
+  }
 
   /* drawn lines join the block of the same colour, so one thread sews both */
   var wideLines = 0;
@@ -1403,7 +1436,7 @@ var API = {
   maskFor: maskFor, dilate: dilate, erode: erode, openMask: openMask, closeMask: closeMask,
   dilateN: dilateN, erodeN: erodeN, dropSpecks: dropSpecks,
   traceContours: traceContours, simplify: simplify, signedArea: signedArea,
-  pointInPoly: pointInPoly, ringLength: ringLength, maskToRegions: maskToRegions,
+  pointInPoly: pointInPoly, ringLength: ringLength, insideRings: insideRings, maskToRegions: maskToRegions,
   fillRegion: fillRegion, runningStitch: runningStitch, splitRun: splitRun, enforceMaxStitch: enforceMaxStitch,
   runningStitchPath: runningStitchPath, boldenLine: boldenLine,
   planDesign: planDesign, planShapes: planShapes, guessVectorBackground: guessVectorBackground, generateRuns: generateRuns,
@@ -1831,7 +1864,7 @@ function shapeRings(node, tol) {
 
 /* ------------------------------ walk ------------------------------- */
 
-var SHAPES = { path: 1, rect: 1, circle: 1, ellipse: 1, polygon: 1, polyline: 1 };
+var SHAPES = { path: 1, rect: 1, circle: 1, ellipse: 1, polygon: 1, polyline: 1, line: 1 };
 var SKIP_CONTAINERS = { defs: 1, clipPath: 1, mask: 1, marker: 1, symbol: 1, pattern: 1, filter: 1 };
 
 function importSVG(source, opt) {
