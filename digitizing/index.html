@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picture to Stitches — Janome .jef maker</title>
+<style>
+  :root {
+    --ink: #1b1b1f; --muted: #6b6b76; --line: #dcdce4;
+    --bg: #f6f6f9; --card: #ffffff; --accent: #c25a2b; --warn: #8a5a00;
+    --warnbg: #fff6e0; --errbg: #fdecec; --err: #a32020;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  header { padding: 18px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 19px; font-weight: 650; }
+  header p  { margin: 3px 0 0; color: var(--muted); font-size: 13.5px; }
+  main { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; align-items: start; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 650; }
+
+  #drop { border: 2px dashed var(--line); border-radius: 10px; padding: 26px 16px; text-align: center;
+          color: var(--muted); cursor: pointer; background: #fbfbfd; }
+  #drop.hot { border-color: var(--accent); background: #fff4ee; color: var(--ink); }
+  #drop b { color: var(--ink); }
+
+  label.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 9px 0; }
+  label.row > span:first-child { color: var(--muted); }
+  input[type=number] { width: 84px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+  input[type=range] { width: 160px; }
+  select { padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; font: inherit; max-width: 210px; }
+  button { font: inherit; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--line);
+           background: #fff; cursor: pointer; }
+  button:hover { border-color: #b9b9c6; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13.5px; }
+  details[open] summary { margin-bottom: 8px; }
+
+  table.colours { width: 100%; border-collapse: collapse; }
+  table.colours td { padding: 5px 4px; vertical-align: middle; border-bottom: 1px solid #f0f0f4; }
+  .sw { width: 26px; height: 26px; border-radius: 5px; border: 1px solid rgba(0,0,0,.18); display: block; }
+  .ord { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12.5px; width: 18px; }
+
+  #stage { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  #cv { width: 100%; height: auto; border-radius: 6px; display: block; background: #222; }
+  .stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 12px; }
+  .stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 12.5px; }
+
+  .note { padding: 9px 11px; border-radius: 7px; margin: 7px 0; font-size: 13.5px;
+          background: var(--warnbg); color: var(--warn); }
+  .note.bad { background: var(--errbg); color: var(--err); }
+  .note .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+               margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.2); }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+  #busy { display: none; color: var(--accent); font-size: 13.5px; margin-top: 8px; }
+  #busy.on { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Picture to Stitches</h1>
+  <p>Turns a PNG or a screenshot into a <b>.jef</b> file a Janome embroidery machine can sew.</p>
+</header>
+
+<main>
+  <!-- ------------------------- left: controls ------------------------- -->
+  <div>
+    <div class="card">
+      <h2>1 &nbsp;Your picture</h2>
+      <div id="drop">
+        <b>Drop a picture here</b><br>or click to choose &middot; or press Ctrl&#8209;V to paste a screenshot
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+      <div class="hint" id="imginfo"></div>
+    </div>
+
+    <div class="card">
+      <h2>2 &nbsp;Size and colours</h2>
+      <label class="row">
+        <span>Finished width</span>
+        <span><input type="number" id="w" value="4" min="0.4" step="0.1"> <select id="unit">
+          <option value="in" selected>inches</option><option value="mm">mm</option></select></span>
+      </label>
+      <label class="row"><span>Number of colours</span>
+        <span><input type="range" id="k" min="2" max="8" value="4"> <b id="kv">4</b></span></label>
+      <label class="row"><span>Check it fits my hoop</span>
+        <select id="hoop">
+          <option value="50,50">50 &times; 50 mm (2 in)</option>
+          <option value="110,110" selected>110 &times; 110 mm (4.3 in)</option>
+          <option value="126,110">126 &times; 110 mm</option>
+          <option value="140,200">140 &times; 200 mm (5.5 &times; 7.9 in)</option>
+          <option value="200,200">200 &times; 200 mm (7.9 in)</option>
+          <option value="230,300">230 &times; 300 mm (9 &times; 11.8 in)</option>
+        </select></label>
+      <div class="hint">The finished width is the width of the design itself, not counting
+        blank background around it.</div>
+    </div>
+
+    <div class="card">
+      <h2>3 &nbsp;Threads</h2>
+      <table class="colours"><tbody id="clist"></tbody></table>
+      <div class="hint">Tick <b>garment</b> for the shirt or background colour — that one is left
+        unstitched, so the fabric shows through. Colours are sewn top to bottom.</div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>Stitch settings (fine tuning)</summary>
+        <label class="row"><span>Fill density</span>
+          <span><input type="range" id="dens" min="30" max="70" value="40"> <b id="densv">0.40</b> mm</span></label>
+        <label class="row"><span>Longest stitch</span>
+          <span><input type="number" id="maxst" value="4" min="1" max="12" step="0.5"> mm</span></label>
+        <label class="row"><span>Fill angle</span>
+          <span><input type="number" id="ang" value="0" min="0" max="179" step="5">&deg;</span></label>
+        <label class="row"><span>Underlay (stops puckering)</span><input type="checkbox" id="under" checked></label>
+        <label class="row"><span>Outline each shape</span><input type="checkbox" id="outl" checked></label>
+        <label class="row"><span>Trim thread on long jumps</span><input type="checkbox" id="trim" checked></label>
+        <label class="row"><span>Colour overlap</span>
+          <span><input type="number" id="ovl" value="0.3" min="0" max="1.5" step="0.05"> mm</span></label>
+        <div class="hint">Lower density number = more thread and a solider look. Overlap stops
+          gaps of bare fabric showing between two colours.</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- -------------------------- right: preview ------------------------- -->
+  <div>
+    <div id="stage">
+      <canvas id="cv" width="900" height="700"></canvas>
+      <div class="stats" id="stats"></div>
+      <div id="busy">Working out the stitches&hellip;</div>
+      <div id="notes"></div>
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+        <button class="primary" id="save" disabled>Save the .jef file</button>
+        <button id="savepng" disabled>Save a picture of the preview</button>
+        <label class="row" style="margin:0"><input type="checkbox" id="showjump"> <span>show jumps</span></label>
+      </div>
+      <div class="hint">Open the saved .jef in Stitch Buddy to check the stitch pattern before
+        sewing it.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* stitcher.js, inlined */
+/* stitcher.js — turn a PNG / screenshot into a Janome .jef embroidery file.
+ *
+ * Pure logic: no DOM, no dependencies. Loads as a plain <script> in the
+ * browser (file:// works) and as a CommonJS module in Node for the tests.
+ *
+ * Geometry is in MILLIMETRES throughout. The .jef file format stores
+ * 1/10 mm integers, and that conversion happens only in encodeJEF().
+ *
+ * Format reference: pyembroidery's JefWriter.py / JefReader.py.
+ */
+(function (root) {
+'use strict';
+
+/* ------------------------------------------------------------------ *
+ * Janome thread palette. The array index IS the number written into
+ * the .jef colour table, so the order here must not be disturbed.
+ * Index 0 is the "no thread / stop" placeholder.
+ * ------------------------------------------------------------------ */
+var JEF_THREADS = [
+  null,
+  [0x000000, "Black", "002"],
+  [0xFFFFFF, "White", "001"],
+  [0xFFFF17, "Yellow", "204"],
+  [0xFF6600, "Orange", "203"],
+  [0x2F5933, "Olive Green", "219"],
+  [0x237336, "Green", "226"],
+  [0x65C2C8, "Sky", "217"],
+  [0xAB5A96, "Purple", "208"],
+  [0xF669A0, "Pink", "201"],
+  [0xFF0000, "Red", "225"],
+  [0xB1704E, "Brown", "214"],
+  [0x0B2F84, "Blue", "207"],
+  [0xE4C35D, "Gold", "003"],
+  [0x481A05, "Dark Brown", "205"],
+  [0xAC9CC7, "Pale Violet", "209"],
+  [0xFCF294, "Pale Yellow", "210"],
+  [0xF999B7, "Pale Pink", "211"],
+  [0xFAB381, "Peach", "212"],
+  [0xC9A480, "Beige", "213"],
+  [0x970533, "Wine Red", "215"],
+  [0xA0B8CC, "Pale Sky", "216"],
+  [0x7FC21C, "Yellow Green", "218"],
+  [0xE5E5E5, "Silver Gray", "220"],
+  [0x889B9B, "Gray", "221"],
+  [0x98D6BD, "Pale Aqua", "227"],
+  [0xB2E1E3, "Baby Blue", "228"],
+  [0x368BA0, "Powder Blue", "229"],
+  [0x4F83AB, "Bright Blue", "230"],
+  [0x386A91, "Slate Blue", "231"],
+  [0x071650, "Navy Blue", "232"],
+  [0xF999A2, "Salmon Pink", "233"],
+  [0xF9676B, "Coral", "234"],
+  [0xE3311F, "Burnt Orange", "235"],
+  [0xE2A188, "Cinnamon", "236"],
+  [0xB59474, "Umber", "237"],
+  [0xE4CF99, "Blond", "238"],
+  [0xFFCB00, "Sunflower", "239"],
+  [0xE1ADD4, "Orchid Pink", "240"],
+  [0xC3007E, "Peony Purple", "241"],
+  [0x80004B, "Burgundy", "242"],
+  [0x540571, "Royal Purple", "243"],
+  [0xB10525, "Cardinal Red", "244"],
+  [0xCAE0C0, "Opal Green", "245"],
+  [0x899856, "Moss Green", "246"],
+  [0x5C941A, "Meadow Green", "247"],
+  [0x003114, "Dark Green", "248"],
+  [0x5DAE94, "Aquamarine", "249"],
+  [0x4CBF8F, "Emerald Green", "250"],
+  [0x007772, "Peacock Green", "251"],
+  [0x595B61, "Dark Gray", "252"],
+  [0xFFFFF2, "Ivory White", "253"],
+  [0xB15818, "Hazel", "254"],
+  [0xCB8A07, "Toast", "255"],
+  [0x986C80, "Salmon", "256"],
+  [0x98692D, "Cocoa Brown", "257"],
+  [0x4D3419, "Sienna", "258"],
+  [0x4C330B, "Sepia", "259"],
+  [0x33200A, "Dark Sepia", "260"],
+  [0x523A97, "Violet Blue", "261"],
+  [0x0D217E, "Blue Ink", "262"],
+  [0x1E77AC, "Sola Blue", "263"],
+  [0xB2DD53, "Green Dust", "264"],
+  [0xF33689, "Crimson", "265"],
+  [0xDE649E, "Floral Pink", "266"],
+  [0x984161, "Wine", "267"],
+  [0x4C5612, "Olive Drab", "268"],
+  [0x4C881F, "Meadow", "269"],
+  [0xE4DE79, "Mustard", "270"],
+  [0xCB8A1A, "Yellow Ocher", "271"],
+  [0xCBA21C, "Old Gold", "272"],
+  [0xFF9805, "Honey Dew", "273"],
+  [0xFCB257, "Tangerine", "274"],
+  [0xFFE505, "Canary Yellow", "275"],
+  [0xF0331F, "Vermilion", "202"],
+  [0x1A842D, "Bright Green", "206"],
+  [0x386CAE, "Ocean Blue", "222"],
+  [0xE3C4B4, "Beige Gray", "223"],
+  [0xE3AC81, "Bamboo", "224"],];
+
+/* ---------------------------- colour ------------------------------ */
+
+/* "Redmean" distance — a cheap approximation of perceived colour
+ * difference. Much better than raw RGB for picking a thread. */
+function colourDist(r1, g1, b1, r2, g2, b2) {
+  var rm = (r1 + r2) / 2;
+  var dr = r1 - r2, dg = g1 - g2, db = b1 - b2;
+  return (2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db;
+}
+
+/* CIE Lab, used for matching a colour to a real spool of thread.
+ * Redmean is fine for grouping pixels but picks visibly wrong threads
+ * for pale colours, so thread choice goes through Lab instead. */
+function srgbToLab(r, g, b) {
+  function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  var R = lin(r), G = lin(g), B = lin(b);
+  var X = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
+  var Y = (R * 0.2126 + G * 0.7152 + B * 0.0722);
+  var Z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
+  function f(t) { return t > 0.008856 ? Math.cbrt(t) : (7.787 * t + 16 / 116); }
+  var fx = f(X), fy = f(Y), fz = f(Z);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
+var THREAD_LAB = JEF_THREADS.map(function (t) {
+  if (!t) return null;
+  var c = t[0];
+  return srgbToLab((c >> 16) & 255, (c >> 8) & 255, c & 255);
+});
+
+function labDist(lab, i) {
+  var t = THREAD_LAB[i];
+  var dl = lab[0] - t[0], da = lab[1] - t[1], db = lab[2] - t[2];
+  return dl * dl + da * da + db * db;
+}
+
+/* Nearest Janome thread for an [r,g,b]. Index 0 is the empty slot and
+ * is never returned. `exclude` skips a slot already spoken for. */
+function nearestThread(rgb, exclude) {
+  var lab = srgbToLab(rgb[0], rgb[1], rgb[2]);
+  var best = 1, bestD = Infinity;
+  for (var i = 1; i < JEF_THREADS.length; i++) {
+    if (exclude !== undefined && i === exclude) continue;
+    var d = labDist(lab, i);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
+function threadInfo(i) {
+  var t = JEF_THREADS[i], c = t[0];
+  return { index: i, name: t[1], code: t[2], rgb: [(c >> 16) & 255, (c >> 8) & 255, c & 255] };
+}
+
+/* ------------------------- quantisation --------------------------- */
+/* Screenshots and logos already contain few real colours; the rest is
+ * anti-aliasing. So: histogram the image coarsely, take the most
+ * popular well-separated colours as seeds, then refine with k-means.
+ * That keeps the true flat colours and lets the soft edge pixels fall
+ * to whichever side they are closer to. */
+
+function quantise(img, k) {
+  var w = img.width, h = img.height, data = img.data, n = w * h;
+  var hist = new Map(), i, key;
+
+  for (i = 0; i < n; i++) {
+    if (data[i * 4 + 3] < 128) continue;             // transparent
+    key = ((data[i * 4] >> 3) << 10) | ((data[i * 4 + 1] >> 3) << 5) | (data[i * 4 + 2] >> 3);
+    hist.set(key, (hist.get(key) || 0) + 1);
+  }
+
+  var entries = Array.from(hist.entries()).sort(function (a, b) { return b[1] - a[1]; });
+  var seeds = [];
+  for (i = 0; i < entries.length && seeds.length < k; i++) {
+    key = entries[i][0];
+    var c = [((key >> 10) & 31) * 8 + 4, ((key >> 5) & 31) * 8 + 4, (key & 31) * 8 + 4];
+    var far = true;
+    for (var j = 0; j < seeds.length; j++) {
+      if (colourDist(c[0], c[1], c[2], seeds[j][0], seeds[j][1], seeds[j][2]) < 3000) { far = false; break; }
+    }
+    if (far) seeds.push(c);
+  }
+  if (!seeds.length) seeds.push([0, 0, 0]);
+
+  /* k-means, a handful of passes over a stride-sampled subset */
+  var stride = Math.max(1, Math.floor(n / 120000));
+  for (var pass = 0; pass < 8; pass++) {
+    var sr = new Float64Array(seeds.length), sg = new Float64Array(seeds.length),
+        sb = new Float64Array(seeds.length), sc = new Float64Array(seeds.length);
+    for (i = 0; i < n; i += stride) {
+      if (data[i * 4 + 3] < 128) continue;
+      var r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+      var bi = 0, bd = Infinity;
+      for (j = 0; j < seeds.length; j++) {
+        var d = colourDist(r, g, b, seeds[j][0], seeds[j][1], seeds[j][2]);
+        if (d < bd) { bd = d; bi = j; }
+      }
+      sr[bi] += r; sg[bi] += g; sb[bi] += b; sc[bi]++;
+    }
+    for (j = 0; j < seeds.length; j++) {
+      if (sc[j] > 0) seeds[j] = [sr[j] / sc[j], sg[j] / sc[j], sb[j] / sc[j]];
+    }
+  }
+  seeds = seeds.map(function (s) { return [Math.round(s[0]), Math.round(s[1]), Math.round(s[2])]; });
+
+  /* final full-resolution assignment */
+  var labels = new Int32Array(n).fill(-1);
+  var counts = new Int32Array(seeds.length);
+  for (i = 0; i < n; i++) {
+    if (data[i * 4 + 3] < 128) continue;
+    var rr = data[i * 4], gg = data[i * 4 + 1], bb = data[i * 4 + 2];
+    var best = 0, bestD = Infinity;
+    for (j = 0; j < seeds.length; j++) {
+      var dd = colourDist(rr, gg, bb, seeds[j][0], seeds[j][1], seeds[j][2]);
+      if (dd < bestD) { bestD = dd; best = j; }
+    }
+    labels[i] = best; counts[best]++;
+  }
+  return { palette: seeds, labels: labels, counts: Array.from(counts), width: w, height: h };
+}
+
+/* Which cluster is the background / garment? Whatever dominates the
+ * border of the image. Transparent borders count as "no thread" too. */
+function guessBackground(q) {
+  var w = q.width, h = q.height, tally = {}, i, lab;
+  function bump(idx) { lab = q.labels[idx]; if (lab >= 0) tally[lab] = (tally[lab] || 0) + 1; }
+  for (i = 0; i < w; i++) { bump(i); bump((h - 1) * w + i); }
+  for (i = 0; i < h; i++) { bump(i * w); bump(i * w + w - 1); }
+  var best = -1, bestN = -1;
+  for (var key in tally) { if (tally[key] > bestN) { bestN = tally[key]; best = +key; } }
+  return best;
+}
+
+/* A photographed garment is never one flat colour — folds and shadow
+ * split it into several clusters, and any one left unticked gets sewn
+ * as a dark blob. So everything close to the background colour counts
+ * as background too. */
+function backgroundGroup(q, primary, tol) {
+  if (primary === undefined || primary < 0) primary = guessBackground(q);
+  if (primary < 0) return [];
+  tol = (tol === undefined) ? 14 : tol;
+  var ref = srgbToLab.apply(null, q.palette[primary]);
+  var group = [];
+  for (var i = 0; i < q.palette.length; i++) {
+    if (!q.counts[i]) continue;
+    var lab = srgbToLab.apply(null, q.palette[i]);
+    var d = Math.sqrt(Math.pow(lab[0]-ref[0],2) + Math.pow(lab[1]-ref[1],2) + Math.pow(lab[2]-ref[2],2));
+    if (i === primary || d <= tol) group.push(i);
+  }
+  return group;
+}
+
+/* --------------------------- bitmap masks -------------------------- */
+
+function maskFor(q, label) {
+  var m = new Uint8Array(q.width * q.height);
+  for (var i = 0; i < m.length; i++) m[i] = (q.labels[i] === label) ? 1 : 0;
+  return m;
+}
+
+/* 3x3 square structuring element. `allow` (optional) restricts where
+ * dilation may grow — we use it so colours may overlap each other but
+ * never bleed outward onto the bare garment. */
+function dilate(m, w, h, allow) {
+  var o = new Uint8Array(m.length);
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      var i = y * w + x;
+      if (m[i]) { o[i] = 1; continue; }
+      if (allow && !allow[i]) continue;
+      var hit = 0;
+      for (var dy = -1; dy <= 1 && !hit; dy++) {
+        var yy = y + dy; if (yy < 0 || yy >= h) continue;
+        for (var dx = -1; dx <= 1; dx++) {
+          var xx = x + dx; if (xx < 0 || xx >= w) continue;
+          if (m[yy * w + xx]) { hit = 1; break; }
+        }
+      }
+      o[i] = hit;
+    }
+  }
+  return o;
+}
+
+function erode(m, w, h) {
+  var o = new Uint8Array(m.length);
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      var i = y * w + x;
+      if (!m[i]) { o[i] = 0; continue; }
+      var all = 1;
+      for (var dy = -1; dy <= 1 && all; dy++) {
+        var yy = y + dy;
+        for (var dx = -1; dx <= 1; dx++) {
+          var xx = x + dx;
+          /* outside the image counts as empty, so shapes pull back from
+           * the border instead of clinging to it */
+          if (xx < 0 || xx >= w || yy < 0 || yy >= h || !m[yy * w + xx]) { all = 0; break; }
+        }
+      }
+      o[i] = all;
+    }
+  }
+  return o;
+}
+
+function openMask(m, w, h, n) {
+  var i;
+  for (i = 0; i < n; i++) m = erode(m, w, h);
+  for (i = 0; i < n; i++) m = dilate(m, w, h);
+  return m;
+}
+
+function closeMask(m, w, h, n) {
+  var i;
+  for (i = 0; i < n; i++) m = dilate(m, w, h);
+  for (i = 0; i < n; i++) m = erode(m, w, h);
+  return m;
+}
+
+function erodeN(m, w, h, n) { for (var i = 0; i < n; i++) m = erode(m, w, h); return m; }
+function dilateN(m, w, h, n, allow) { for (var i = 0; i < n; i++) m = dilate(m, w, h, allow); return m; }
+
+/* Label 4-connected blobs and delete the ones below minPx. */
+function dropSpecks(m, w, h, minPx) {
+  var seen = new Uint8Array(m.length), out = new Uint8Array(m.length), stack = [];
+  for (var s = 0; s < m.length; s++) {
+    if (!m[s] || seen[s]) continue;
+    var blob = [];
+    stack.length = 0; stack.push(s); seen[s] = 1;
+    while (stack.length) {
+      var i = stack.pop(); blob.push(i);
+      var x = i % w, y = (i - x) / w;
+      if (x > 0     && m[i - 1] && !seen[i - 1]) { seen[i - 1] = 1; stack.push(i - 1); }
+      if (x < w - 1 && m[i + 1] && !seen[i + 1]) { seen[i + 1] = 1; stack.push(i + 1); }
+      if (y > 0     && m[i - w] && !seen[i - w]) { seen[i - w] = 1; stack.push(i - w); }
+      if (y < h - 1 && m[i + w] && !seen[i + w]) { seen[i + w] = 1; stack.push(i + w); }
+    }
+    if (blob.length >= minPx) for (var k = 0; k < blob.length; k++) out[blob[k]] = 1;
+  }
+  return out;
+}
+
+/* ------------------------ contour tracing -------------------------- */
+/* Marching squares. Each cell emits directed segment(s) oriented with
+ * the filled area on the left; segments then chain head-to-tail into
+ * closed loops. Vertices land on half-pixel positions. */
+
+var MS_T = 0, MS_R = 1, MS_B = 2, MS_L = 3;
+var MS_CASES = [
+  [],                             /*  0 */
+  [[MS_B, MS_L]],                 /*  1 */
+  [[MS_R, MS_B]],                 /*  2 */
+  [[MS_R, MS_L]],                 /*  3 */
+  [[MS_T, MS_R]],                 /*  4 */
+  [[MS_T, MS_R], [MS_B, MS_L]],   /*  5 saddle */
+  [[MS_T, MS_B]],                 /*  6 */
+  [[MS_T, MS_L]],                 /*  7 */
+  [[MS_L, MS_T]],                 /*  8 */
+  [[MS_B, MS_T]],                 /*  9 */
+  [[MS_L, MS_T], [MS_R, MS_B]],   /* 10 saddle */
+  [[MS_R, MS_T]],                 /* 11 */
+  [[MS_L, MS_R]],                 /* 12 */
+  [[MS_B, MS_R]],                 /* 13 */
+  [[MS_L, MS_B]],                 /* 14 */
+  []                              /* 15 */
+];
+
+function traceContours(m, w, h) {
+  function at(x, y) { return (x < 0 || y < 0 || x >= w || y >= h) ? 0 : m[y * w + x]; }
+  function pt(edge, i, j) {
+    if (edge === MS_T) return [i + 0.5, j];
+    if (edge === MS_R) return [i + 1, j + 0.5];
+    if (edge === MS_B) return [i + 0.5, j + 1];
+    return [i, j + 0.5];
+  }
+  var KY = 2 * (h + 4);
+  function key(p) { return ((p[0] + 1) * 2) * KY + ((p[1] + 1) * 2); }
+
+  var segs = new Map();
+  for (var j = -1; j < h; j++) {
+    for (var i = -1; i < w; i++) {
+      var code = at(i, j) * 8 + at(i + 1, j) * 4 + at(i + 1, j + 1) * 2 + at(i, j + 1);
+      var list = MS_CASES[code];
+      for (var s = 0; s < list.length; s++) {
+        var seg = [pt(list[s][0], i, j), pt(list[s][1], i, j)];
+        var k = key(seg[0]);
+        if (!segs.has(k)) segs.set(k, []);
+        segs.get(k).push(seg);
+      }
+    }
+  }
+
+  var loops = [];
+  segs.forEach(function (list) {
+    for (var s = 0; s < list.length; s++) {
+      if (list[s].used) continue;
+      var loop = [], cur = list[s], guard = 0;
+      var startKey = key(cur[0]);
+      while (cur && !cur.used && guard++ < 4000000) {
+        cur.used = true;
+        loop.push(cur[0]);
+        var nk = key(cur[1]);
+        if (nk === startKey) break;
+        var cand = segs.get(nk), nxt = null;
+        if (cand) for (var c = 0; c < cand.length; c++) if (!cand[c].used) { nxt = cand[c]; break; }
+        cur = nxt;
+      }
+      if (loop.length >= 4) loops.push(loop);
+    }
+  });
+  return loops;
+}
+
+function ringLength(ring) {
+  var L = 0;
+  for (var i = 0; i < ring.length; i++) {
+    var p = ring[i], q = ring[(i + 1) % ring.length];
+    L += Math.hypot(q[0] - p[0], q[1] - p[1]);
+  }
+  return L;
+}
+
+function signedArea(poly) {
+  var a = 0;
+  for (var i = 0, n = poly.length; i < n; i++) {
+    var p = poly[i], q = poly[(i + 1) % n];
+    a += p[0] * q[1] - q[0] * p[1];
+  }
+  return a / 2;
+}
+
+function pointInPoly(x, y, poly) {
+  var inside = false;
+  for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+/* Ramer-Douglas-Peucker */
+function simplify(poly, tol) {
+  if (poly.length < 4) return poly;
+  var keep = new Uint8Array(poly.length);
+  keep[0] = keep[poly.length - 1] = 1;
+  var stack = [[0, poly.length - 1]];
+  while (stack.length) {
+    var seg = stack.pop(), a = seg[0], b = seg[1];
+    var ax = poly[a][0], ay = poly[a][1], bx = poly[b][0], by = poly[b][1];
+    var dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1e-9;
+    var worst = -1, wi = -1;
+    for (var i = a + 1; i < b; i++) {
+      var d = Math.abs((poly[i][0] - ax) * dy - (poly[i][1] - ay) * dx) / len;
+      if (d > worst) { worst = d; wi = i; }
+    }
+    if (worst > tol && wi > 0) { keep[wi] = 1; stack.push([a, wi], [wi, b]); }
+  }
+  var out = [];
+  for (var k = 0; k < poly.length; k++) if (keep[k]) out.push(poly[k]);
+  return out;
+}
+
+/* Turn a bitmap mask into regions (an outer ring plus any holes),
+ * converting pixel coordinates to millimetres on the way out. */
+function maskToRegions(m, w, h, mmPerPx, simplifyPx) {
+  var loops = traceContours(m, w, h)
+    .map(function (l) { return simplify(l, simplifyPx); })
+    .filter(function (l) { return l.length >= 3 && Math.abs(signedArea(l)) > 1.0; });
+
+  var outers = [], holes = [];
+  for (var i = 0; i < loops.length; i++) {
+    /* a loop is a hole when it sits inside an odd number of others */
+    var depth = 0;
+    for (var j = 0; j < loops.length; j++) {
+      if (i === j) continue;
+      if (pointInPoly(loops[i][0][0], loops[i][0][1], loops[j])) depth++;
+    }
+    (depth % 2 ? holes : outers).push(loops[i]);
+  }
+
+  var regions = outers.map(function (o) { return { outer: o, holes: [] }; });
+  holes.forEach(function (hl) {
+    var bestIdx = -1, bestArea = Infinity;
+    for (var r = 0; r < regions.length; r++) {
+      if (pointInPoly(hl[0][0], hl[0][1], regions[r].outer)) {
+        var ar = Math.abs(signedArea(regions[r].outer));
+        if (ar < bestArea) { bestArea = ar; bestIdx = r; }
+      }
+    }
+    if (bestIdx >= 0) regions[bestIdx].holes.push(hl);
+  });
+
+  function toMm(p) { return [p[0] * mmPerPx, p[1] * mmPerPx]; }
+  return regions.map(function (r) {
+    var outer = r.outer.map(toMm);
+    var holes = r.holes.map(function (hl) { return hl.map(toMm); });
+    var area = Math.abs(signedArea(outer));
+    var per  = ringLength(outer);
+    holes.forEach(function (hl) { area -= Math.abs(signedArea(hl)); per += ringLength(hl); });
+    area = Math.max(area, 0);
+    return {
+      outer: outer, holes: holes,
+      areaMm2: area, perimeterMm: per,
+      /* For a long thin shape, 2 x area / perimeter is very close to its
+       * stroke width. Anything under about 1.2 mm is finer than thread
+       * can hold, which is how we spot detail that will not stitch. */
+      avgWidthMm: per > 0 ? 2 * area / per : 0
+    };
+  });
+}
+
+/* ------------------------- stitch generation ----------------------- */
+
+function rot(p, c, s)  { return [p[0] * c - p[1] * s, p[0] * s + p[1] * c]; }
+
+/* Break a straight run into stitches no longer than maxLen. `phase`
+ * (0..1) shifts where the first break falls, so that the breaks in
+ * neighbouring rows do not line up into a visible seam — this is what
+ * makes a tatami fill look like fabric instead of like slats. */
+function splitRun(x0, x1, maxLen, phase) {
+  var total = Math.abs(x1 - x0), dir = x1 >= x0 ? 1 : -1, pts = [x0];
+  if (total <= maxLen) { pts.push(x1); return pts; }
+  var cur = maxLen * (phase || 0);
+  if (cur < maxLen * 0.3) cur += maxLen;
+  while (total - cur > maxLen * 0.3) { pts.push(x0 + dir * cur); cur += maxLen; }
+  pts.push(x1);
+  return pts;
+}
+
+/* Scanline ("tatami") fill of a region.
+ *
+ * Returns an array of runs; each run is a continuous list of stitch
+ * points, and moving between runs needs a jump. Rows that overlap are
+ * chained together so that a simple shape comes out as ONE run with no
+ * jumps at all.
+ */
+function fillRegion(region, opt) {
+  var angle    = (opt.angleDeg || 0) * Math.PI / 180,
+      spacing  = opt.spacingMm,
+      maxStit  = opt.maxStitchMm,
+      inset    = opt.insetMm || 0,
+      c = Math.cos(-angle), s = Math.sin(-angle);
+
+  var rings = [region.outer].concat(region.holes).map(function (ring) {
+    return ring.map(function (p) { return rot(p, c, s); });
+  });
+
+  var yMin = Infinity, yMax = -Infinity;
+  rings[0].forEach(function (p) { if (p[1] < yMin) yMin = p[1]; if (p[1] > yMax) yMax = p[1]; });
+  if (!isFinite(yMin)) return [];
+
+  /* pull the first and last rows in, so the fill does not spill past
+   * the edge of the shape */
+  var y0 = yMin + Math.max(spacing * 0.5, inset), y1 = yMax - inset;
+  if (y1 <= y0) { y0 = (yMin + yMax) / 2; y1 = y0; }
+
+  var rows = [];
+  for (var y = y0; y <= y1 + 1e-9; y += spacing) {
+    var xs = [];
+    for (var r = 0; r < rings.length; r++) {
+      var ring = rings[r];
+      for (var i = 0, n = ring.length; i < n; i++) {
+        var p = ring[i], q = ring[(i + 1) % n];
+        if ((p[1] <= y && q[1] > y) || (q[1] <= y && p[1] > y)) {
+          xs.push(p[0] + (y - p[1]) * (q[0] - p[0]) / (q[1] - p[1]));
+        }
+      }
+    }
+    xs.sort(function (a, b) { return a - b; });
+    var spans = [];
+    for (var k = 0; k + 1 < xs.length; k += 2) {
+      var a = xs[k] + inset, b = xs[k + 1] - inset;
+      if (b - a > Math.max(0.2, spacing * 0.5)) spans.push({ a: a, b: b, y: y, used: false });
+    }
+    if (spans.length) rows.push(spans);
+  }
+  if (!rows.length) return [];
+
+  /* chain vertically-overlapping spans so the needle can walk straight
+   * from one row to the next without a jump */
+  var runs = [], si = Math.sin(angle), co = Math.cos(angle);
+  for (var ri = 0; ri < rows.length; ri++) {
+    for (var sp = 0; sp < rows[ri].length; sp++) {
+      if (rows[ri][sp].used) continue;
+      var chain = [], cr = ri, cs = sp;
+      while (cr < rows.length && cs >= 0 && !rows[cr][cs].used) {
+        rows[cr][cs].used = true;
+        chain.push(rows[cr][cs]);
+        var nxt = -1;
+        if (cr + 1 < rows.length) {
+          var cur = rows[cr][cs], bestOv = 0;
+          for (var t = 0; t < rows[cr + 1].length; t++) {
+            var o = rows[cr + 1][t];
+            if (o.used) continue;
+            var ov = Math.min(cur.b, o.b) - Math.max(cur.a, o.a);
+            if (ov > bestOv) { bestOv = ov; nxt = t; }
+          }
+        }
+        if (nxt < 0) break;
+        cr += 1; cs = nxt;
+      }
+
+      var pts = [], lastX = null;
+      for (var ci = 0; ci < chain.length; ci++) {
+        var span = chain[ci];
+        /* begin each row at whichever end sits closer to where the
+         * previous row finished, so the needle never has to run the
+         * width of the shape just to start the next row */
+        var from, to;
+        if (lastX === null || Math.abs(span.a - lastX) <= Math.abs(span.b - lastX)) { from = span.a; to = span.b; }
+        else { from = span.b; to = span.a; }
+        var xsSplit = splitRun(from, to, maxStit, (ci % 4) / 4);
+        for (var xi = 0; xi < xsSplit.length; xi++) {
+          /* rotate back out of scanline space */
+          pts.push(rot([xsSplit[xi], span.y], co, si));
+        }
+        lastX = to;
+      }
+      if (pts.length > 1) runs.push(pts);
+    }
+  }
+  return runs;
+}
+
+/* Running stitch that walks a contour — used for underlay edges and for
+ * the optional crisp outline around a filled shape. */
+function runningStitch(ring, stepMm) {
+  var pts = [ring[0]];
+  var acc = 0;
+  for (var i = 1; i <= ring.length; i++) {
+    var p = ring[i - 1], q = ring[i % ring.length];
+    var dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy);
+    var pos = 0;
+    while (acc + (len - pos) >= stepMm) {
+      pos += stepMm - acc; acc = 0;
+      pts.push([p[0] + dx * pos / len, p[1] + dy * pos / len]);
+    }
+    acc += len - pos;
+  }
+  return pts;
+}
+
+/* Split any hop longer than maxLen into equal steps. Dropping tiny
+ * stitches can open up a long gap, and a row-to-row move can be long in
+ * an awkward shape, so this runs last as a guarantee: the .jef format
+ * cannot even express a stitch beyond 12.7 mm. */
+function enforceMaxStitch(pts, maxLen) {
+  if (pts.length < 2) return pts;
+  var out = [pts[0]];
+  for (var i = 1; i < pts.length; i++) {
+    var p = out[out.length - 1], q = pts[i];
+    var d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    if (d > maxLen) {
+      var n = Math.ceil(d / maxLen);
+      for (var k = 1; k < n; k++) out.push([p[0] + (q[0] - p[0]) * k / n, p[1] + (q[1] - p[1]) * k / n]);
+    }
+    out.push(q);
+  }
+  return out;
+}
+
+/* Drop stitches that land almost on top of the previous one. Very short
+ * stitches jam the machine and can snap needles, so this matters. */
+function dropTinyStitches(pts, minMm) {
+  if (pts.length < 2) return pts;
+  var out = [pts[0]];
+  for (var i = 1; i < pts.length - 1; i++) {
+    var last = out[out.length - 1];
+    if (Math.hypot(pts[i][0] - last[0], pts[i][1] - last[1]) >= minMm) out.push(pts[i]);
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+
+/* ------------------------ whole-image planning --------------------- */
+
+var DEFAULTS = {
+  widthMm:       100,   /* finished design width */
+  colours:       6,
+  spacingMm:     0.40,  /* distance between fill rows */
+  maxStitchMm:   4.0,
+  minStitchMm:   0.5,
+  angleDeg:      0,     /* fill angle of the first colour */
+  angleStepDeg:  20,    /* each further colour turns by this much */
+  underlay:      true,
+  underlaySpacingMm: 2.5,
+  outline:       true,
+  outlineStepMm: 1.8,
+  overlapMm:     0.3,   /* how far colours grow into each other */
+  insetMm:       0.15,
+  cleanupPx:     1,
+  minAreaMm2:    0.6,
+  simplifyPx:    0.75,
+  trims:         true
+};
+
+function planDesign(img, userOpt) {
+  var opt = Object.assign({}, DEFAULTS, userOpt || {});
+  var q = opt.quantised || quantise(img, opt.colours);
+  var w = q.width, h = q.height;
+  /* which clusters are garment and stay unstitched */
+  var bgList = opt.backgroundLabels ||
+               backgroundGroup(q, opt.backgroundLabel, opt.backgroundTol);
+  var isBg = {};
+  bgList.forEach(function (l) { isBg[l] = true; });
+  var bg = bgList.length ? bgList[0] : -1;
+
+  /* colours may grow into each other, but never out onto the garment */
+  var stitchable = new Uint8Array(w * h);
+  for (var i = 0; i < stitchable.length; i++) stitchable[i] = (q.labels[i] >= 0 && !isBg[q.labels[i]]) ? 1 : 0;
+
+  /* widthMm is the width of the ARTWORK, not of the image canvas, so
+   * that asking for 100 mm gives a design 100 mm across however much
+   * empty background happens to surround it */
+  var bx0 = Infinity, bx1 = -Infinity;
+  for (var py = 0; py < h; py++) {
+    for (var px = 0; px < w; px++) {
+      if (stitchable[py * w + px]) { if (px < bx0) bx0 = px; if (px > bx1) bx1 = px; }
+    }
+  }
+  var artPx = isFinite(bx0) ? (bx1 - bx0 + 1) : w;
+  var mmPerPx = opt.widthMm / artPx;
+
+  var growPx    = Math.max(0, Math.round(opt.overlapMm / mmPerPx));
+  var minAreaPx = Math.max(4, Math.round(opt.minAreaMm2 / (mmPerPx * mmPerPx)));
+
+  var blocks = [], notes = [];
+  var THIN_MM = opt.thinWarnMm || 1.2;
+  for (var lab = 0; lab < q.palette.length; lab++) {
+    if (isBg[lab] || !q.counts[lab]) continue;
+    if (opt.skip && opt.skip.indexOf(lab) >= 0) continue;
+
+    var m = maskFor(q, lab);
+    if (opt.cleanupPx > 0) {
+      m = openMask(m, w, h, opt.cleanupPx);
+      m = closeMask(m, w, h, opt.cleanupPx);
+    }
+    m = dropSpecks(m, w, h, minAreaPx);
+    if (growPx) m = dilateN(m, w, h, growPx, stitchable);
+    var traced  = maskToRegions(m, w, h, mmPerPx, opt.simplifyPx);
+    var regions = traced.filter(function (r) { return r.areaMm2 >= opt.minAreaMm2; });
+    if (!regions.length) {
+      notes.push({ kind: 'dropped', rgb: q.palette[lab],
+        text: 'A colour was too fine to stitch at this size and has been left out.' });
+      continue;
+    }
+    if (traced.length > regions.length) {
+      notes.push({ kind: 'specks', rgb: q.palette[lab], count: traced.length - regions.length,
+        text: (traced.length - regions.length) + ' tiny spot(s) of this colour were too small to stitch and were left out.' });
+    }
+    var thin = regions.filter(function (r) { return r.avgWidthMm < THIN_MM; }).length;
+    if (thin) {
+      notes.push({ kind: 'thin', rgb: q.palette[lab], count: thin,
+        text: thin + ' shape(s) of this colour are thinner than ' + THIN_MM.toFixed(1) +
+              ' mm. Thread cannot hold detail that fine — make the design bigger or simplify it.' });
+    }
+
+    blocks.push({
+      label:   lab,
+      rgb:     q.palette[lab],
+      thread:  nearestThread(q.palette[lab]),
+      regions: regions,
+      areaMm2: regions.reduce(function (a, r) { return a + r.areaMm2; }, 0)
+    });
+  }
+
+  /* stitch the biggest areas first and the fine detail last */
+  blocks.sort(function (a, b) { return b.areaMm2 - a.areaMm2; });
+  if (opt.threadOverride) {
+    blocks.forEach(function (bk) {
+      if (opt.threadOverride[bk.label]) bk.thread = opt.threadOverride[bk.label];
+    });
+  }
+
+  blocks.forEach(function (bk, bi) {
+    var angle = opt.angleDeg + bi * opt.angleStepDeg;
+    bk.angleDeg = angle;
+    bk.runs = [];
+    bk.regions.forEach(function (reg) {
+      if (opt.underlay) {
+        fillRegion(reg, {
+          angleDeg: angle + 90, spacingMm: opt.underlaySpacingMm,
+          maxStitchMm: 3.0, insetMm: Math.max(opt.insetMm, 0.6)
+        }).forEach(function (r) { bk.runs.push(r); });
+      }
+      fillRegion(reg, {
+        angleDeg: angle, spacingMm: opt.spacingMm,
+        maxStitchMm: opt.maxStitchMm, insetMm: opt.insetMm
+      }).forEach(function (r) { bk.runs.push(r); });
+      if (opt.outline) {
+        bk.runs.push(runningStitch(reg.outer, opt.outlineStepMm));
+        reg.holes.forEach(function (hl) { bk.runs.push(runningStitch(hl, opt.outlineStepMm)); });
+      }
+    });
+    bk.runs = bk.runs
+      .map(function (r) { return dropTinyStitches(r, opt.minStitchMm); })
+      .map(function (r) { return enforceMaxStitch(r, opt.maxStitchMm); })
+      .filter(function (r) { return r.length > 1; });
+  });
+
+  return { blocks: blocks.filter(function (b) { return b.runs.length; }),
+           notes: notes, quantised: q, backgroundLabel: bg, backgroundLabels: bgList,
+           mmPerPx: mmPerPx, opt: opt };
+}
+
+/* Order the runs inside each colour so the needle takes short hops,
+ * then emit the flat command list the .jef writer consumes. */
+function buildStitches(plan) {
+  var out = [], threads = [], cur = [0, 0], first = true;
+
+  plan.blocks.forEach(function (bk) {
+    threads.push(bk.thread);
+    if (!first) out.push({ x: cur[0], y: cur[1], cmd: 'color' });
+    first = false;
+
+    var pool = bk.runs.slice();
+    while (pool.length) {
+      var bi = 0, bd = Infinity, rev = false;
+      for (var i = 0; i < pool.length; i++) {
+        var a = pool[i][0], b = pool[i][pool[i].length - 1];
+        var da = Math.hypot(a[0] - cur[0], a[1] - cur[1]);
+        var db = Math.hypot(b[0] - cur[0], b[1] - cur[1]);
+        if (da < bd) { bd = da; bi = i; rev = false; }
+        if (db < bd) { bd = db; bi = i; rev = true; }
+      }
+      var run = pool.splice(bi, 1)[0];
+      if (rev) run = run.slice().reverse();
+
+      if (bd > 0.001) {
+        if (plan.opt.trims && bd > 4) out.push({ x: cur[0], y: cur[1], cmd: 'trim' });
+        out.push({ x: run[0][0], y: run[0][1], cmd: 'jump' });
+      }
+      for (var s = 0; s < run.length; s++) out.push({ x: run[s][0], y: run[s][1], cmd: 'stitch' });
+      cur = run[run.length - 1];
+    }
+  });
+
+  out.push({ x: cur[0], y: cur[1], cmd: 'end' });
+  return { stitches: out, threads: threads };
+}
+
+/* --------------------------- .jef writing -------------------------- */
+/* Header layout (all little-endian), matching pyembroidery's JefWriter:
+ *
+ *   0x00  int32  offset to the stitch data = 0x74 + colours * 8
+ *   0x04  int32  0x14
+ *   0x08  char14 date, "YYYYMMDDHHMMSS"
+ *   0x16  2 x byte 0
+ *   0x18  int32  number of colour blocks
+ *   0x1C  int32  number of 2-byte records that follow
+ *   0x20  int32  hoop code
+ *   0x24  4 x int32  design half-width / half-height from hoop centre
+ *   0x34  4 x int32  clearance inside the 110x110 hoop
+ *   0x44  4 x int32  clearance inside the 50x50 hoop
+ *   0x54  4 x int32  clearance inside the 140x200 hoop
+ *   0x64  4 x int32  clearance inside a custom hoop
+ *   0x74  colours x int32  thread palette indices
+ *         colours x int32  0x0D per colour
+ *         stitch bytes, terminated by 80 10
+ *
+ * Stitch records are two signed bytes, dx and dy, in 1/10 mm. The file
+ * measures y upward while we work y downward, hence the negation.
+ */
+
+var HOOP_110X110 = 0, HOOP_50X50 = 1, HOOP_140X200 = 2, HOOP_126X110 = 3, HOOP_200X200 = 4;
+
+function jefHoopCode(width, height) {           /* units of 1/10 mm */
+  if (width < 500  && height < 500)  return HOOP_50X50;
+  if (width < 1260 && height < 1100) return HOOP_126X110;
+  if (width < 1400 && height < 2000) return HOOP_140X200;
+  if (width < 2000 && height < 2000) return HOOP_200X200;
+  return HOOP_110X110;
+}
+
+function dateStamp(d) {
+  d = d || new Date();
+  function p(n, w) { return String(n).padStart(w || 2, '0'); }
+  return p(d.getFullYear(), 4) + p(d.getMonth() + 1) + p(d.getDate()) +
+         p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+
+/* Two different threads must not collapse onto the same palette slot,
+ * or the machine shows one colour where two were intended. */
+function resolvePalette(threads) {
+  var out = [], prev = -1;
+  for (var i = 0; i < threads.length; i++) {
+    var idx = threads[i];
+    if (idx === prev) {
+      var c = JEF_THREADS[idx][0];
+      idx = nearestThread([(c >> 16) & 255, (c >> 8) & 255, c & 255], idx);
+    }
+    out.push(idx); prev = idx;
+  }
+  return out;
+}
+
+function encodeJEF(built, opt) {
+  opt = opt || {};
+  var stitches = built.stitches, trims = opt.trims !== false;
+
+  /* millimetres -> 1/10 mm, centred on the hoop */
+  var pts = stitches.filter(function (s) { return s.cmd === 'stitch'; });
+  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  pts.forEach(function (s) {
+    if (s.x < minX) minX = s.x; if (s.x > maxX) maxX = s.x;
+    if (s.y < minY) minY = s.y; if (s.y > maxY) maxY = s.y;
+  });
+  if (!isFinite(minX)) { minX = minY = maxX = maxY = 0; }
+  var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  function ux(v) { return Math.round((v - cx) * 10); }
+  function uy(v) { return Math.round((v - cy) * 10); }
+
+  var designW = Math.round((maxX - minX) * 10), designH = Math.round((maxY - minY) * 10);
+
+  /* ---- stitch bytes ---- */
+  var body = [], xx = 0, yy = 0;
+  function push2(a, b) { body.push(a & 0xFF, b & 0xFF); }
+  function stepTo(tx, ty, kind) {
+    /* one record can only carry -127..127 in each axis */
+    while (true) {
+      var dx = tx - xx, dy = ty - yy;
+      var sx = Math.max(-127, Math.min(127, dx));
+      var sy = Math.max(-127, Math.min(127, dy));
+      xx += sx; yy += sy;
+      if (kind === 'jump') { body.push(0x80, 0x02); push2(sx, -sy); }
+      else                 { push2(sx, -sy); }
+      if (xx === tx && yy === ty) break;
+    }
+  }
+
+  stitches.forEach(function (s) {
+    var tx = ux(s.x), ty = uy(s.y);
+    if (s.cmd === 'stitch')      stepTo(tx, ty, 'stitch');
+    else if (s.cmd === 'jump')   stepTo(tx, ty, 'jump');
+    else if (s.cmd === 'color')  { body.push(0x80, 0x01); push2(tx - xx, -(ty - yy)); xx = tx; yy = ty; }
+    else if (s.cmd === 'trim')   { if (trims) for (var t = 0; t < 3; t++) body.push(0x80, 0x02, 0x00, 0x00); }
+  });
+  body.push(0x80, 0x10);
+
+  var palette   = resolvePalette(built.threads);
+  var colours   = palette.length;
+  var offset    = 0x74 + colours * 8;
+  var pointCount = body.length / 2;
+
+  var buf = new Uint8Array(offset + body.length);
+  var dv  = new DataView(buf.buffer);
+  var o   = 0;
+  function i32(v) { dv.setInt32(o, v, true); o += 4; }
+
+  i32(offset);
+  i32(0x14);
+  var ds = dateStamp(opt.date);
+  for (var i = 0; i < 14; i++) buf[o++] = ds.charCodeAt(i);
+  buf[o++] = 0; buf[o++] = 0;
+  i32(colours);
+  i32(pointCount);
+  i32(jefHoopCode(designW, designH));
+
+  var halfW = Math.round(designW / 2), halfH = Math.round(designH / 2);
+  i32(halfW); i32(halfH); i32(halfW); i32(halfH);
+
+  function clearance(x, y) {
+    if (Math.min(x, y) >= 0) { i32(x); i32(y); i32(x); i32(y); }
+    else { i32(-1); i32(-1); i32(-1); i32(-1); }
+  }
+  clearance(550 - halfW,  550 - halfH);      /* 110 x 110 */
+  clearance(250 - halfW,  250 - halfH);      /*  50 x  50 */
+  clearance(700 - halfW, 1000 - halfH);      /* 140 x 200 */
+  clearance(700 - halfW, 1000 - halfH);      /* custom     */
+
+  for (i = 0; i < colours; i++) i32(palette[i]);
+  for (i = 0; i < colours; i++) i32(0x0D);
+  buf.set(body, offset);
+  return buf;
+}
+
+/* --------------------------- .jef reading -------------------------- */
+/* Enough of a reader to preview a file Sarah already has, and to check
+ * our own output round-trips. */
+function decodeJEF(bytes) {
+  var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  var offset  = dv.getInt32(0, true);
+  var colours = dv.getInt32(0x18, true);
+  var palette = [];
+  for (var i = 0; i < colours; i++) palette.push(Math.abs(dv.getInt32(0x74 + i * 4, true)));
+
+  var stitches = [], x = 0, y = 0, p = offset;
+  function s8(v) { return v > 127 ? v - 256 : v; }
+  while (p + 1 < bytes.length) {
+    var b0 = bytes[p], b1 = bytes[p + 1];
+    if (b0 !== 0x80) { x += s8(b0); y -= s8(b1); stitches.push({ x: x, y: y, cmd: 'stitch' }); p += 2; continue; }
+    if (b1 === 0x10) { stitches.push({ x: x, y: y, cmd: 'end' }); break; }
+    var dx = s8(bytes[p + 2]), dy = -s8(bytes[p + 3]);
+    if (b1 === 0x02) {
+      if (dx === 0 && dy === 0) stitches.push({ x: x, y: y, cmd: 'trim' });
+      else { x += dx; y += dy; stitches.push({ x: x, y: y, cmd: 'jump' }); }
+    } else if (b1 === 0x01) {
+      x += dx; y += dy; stitches.push({ x: x, y: y, cmd: 'color' });
+    }
+    p += 4;
+  }
+  return { palette: palette, colours: colours, stitches: stitches, pointCount: dv.getInt32(0x1C, true) };
+}
+
+/* ----------------------------- summary ----------------------------- */
+
+function summarise(built) {
+  var n = { stitch: 0, jump: 0, trim: 0, color: 0 };
+  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  built.stitches.forEach(function (s) {
+    if (n[s.cmd] !== undefined) n[s.cmd]++;
+    if (s.cmd === 'stitch') {
+      if (s.x < minX) minX = s.x; if (s.x > maxX) maxX = s.x;
+      if (s.y < minY) minY = s.y; if (s.y > maxY) maxY = s.y;
+    }
+  });
+  return {
+    stitches: n.stitch, jumps: n.jump, trims: n.trim,
+    colours: built.threads.length,
+    widthMm:  isFinite(minX) ? maxX - minX : 0,
+    heightMm: isFinite(minY) ? maxY - minY : 0,
+    /* domestic machines run somewhere around 700 stitches a minute */
+    minutes: Math.round(n.stitch / 700 + built.threads.length * 0.5)
+  };
+}
+
+/* ----------------------------- exports ----------------------------- */
+
+var API = {
+  JEF_THREADS: JEF_THREADS, nearestThread: nearestThread, threadInfo: threadInfo,
+  colourDist: colourDist, quantise: quantise, guessBackground: guessBackground, backgroundGroup: backgroundGroup, srgbToLab: srgbToLab,
+  maskFor: maskFor, dilate: dilate, erode: erode, openMask: openMask, closeMask: closeMask,
+  dilateN: dilateN, erodeN: erodeN, dropSpecks: dropSpecks,
+  traceContours: traceContours, simplify: simplify, signedArea: signedArea,
+  pointInPoly: pointInPoly, ringLength: ringLength, maskToRegions: maskToRegions,
+  fillRegion: fillRegion, runningStitch: runningStitch, splitRun: splitRun, enforceMaxStitch: enforceMaxStitch,
+  planDesign: planDesign, buildStitches: buildStitches,
+  encodeJEF: encodeJEF, decodeJEF: decodeJEF, summarise: summarise,
+  jefHoopCode: jefHoopCode, DEFAULTS: DEFAULTS
+};
+
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+root.Stitcher = API;
+
+})(typeof self !== 'undefined' ? self : this);
+
+</script>
+<script>
+(function () {
+'use strict';
+var S = window.Stitcher;
+var $ = function (id) { return document.getElementById(id); };
+
+var img = null;          /* ImageData, already scaled down for speed */
+var srcName = 'design';
+var quant = null;        /* cached quantisation, keyed by colour count */
+var quantK = -1;
+var bgSet = [];          /* labels left unstitched (the garment) */
+var overrides = {};      /* label -> thread index chosen by hand */
+var plan = null, built = null, lastBytes = null;
+
+var MAX_PX = 700;        /* plenty of detail for embroidery, and keeps it fast */
+
+/* ------------------------------ input ------------------------------ */
+
+var drop = $('drop');
+drop.onclick = function () { $('file').click(); };
+$('file').onchange = function (e) { if (e.target.files[0]) loadFile(e.target.files[0]); };
+['dragenter', 'dragover'].forEach(function (t) {
+  drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('hot'); });
+});
+['dragleave', 'drop'].forEach(function (t) {
+  drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('hot'); });
+});
+drop.addEventListener('drop', function (e) {
+  var f = e.dataTransfer.files[0]; if (f) loadFile(f);
+});
+window.addEventListener('paste', function (e) {
+  var items = (e.clipboardData || {}).items || [];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') === 0) { loadFile(items[i].getAsFile(), 'pasted'); break; }
+  }
+});
+
+function loadFile(file, name) {
+  srcName = (name || file.name || 'design').replace(/\.[^.]+$/, '');
+  var url = URL.createObjectURL(file);
+  var im = new Image();
+  im.onload = function () {
+    var scale = Math.min(1, MAX_PX / Math.max(im.width, im.height));
+    var w = Math.max(1, Math.round(im.width * scale)), h = Math.max(1, Math.round(im.height * scale));
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var g = c.getContext('2d', { willReadFrequently: true });
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(im, 0, 0, w, h);
+    img = g.getImageData(0, 0, w, h);
+    URL.revokeObjectURL(url);
+    $('imginfo').textContent = im.width + ' × ' + im.height + ' pixels' +
+      (scale < 1 ? '  (working at ' + w + ' × ' + h + ')' : '');
+    quantK = -1; overrides = {}; bgSet = [];
+    recolour(); redo();
+  };
+  im.onerror = function () { alert('That file could not be opened as a picture.'); };
+  im.src = url;
+}
+
+/* --------------------------- colour list --------------------------- */
+
+function recolour() {
+  if (!img) return;
+  var k = +$('k').value;
+  if (quantK !== k) {
+    quant = S.quantise(img, k); quantK = k;
+    /* a photographed shirt splits into several near-identical darks;
+     * tick them all as garment by default */
+    bgSet = S.backgroundGroup(quant);
+  }
+
+  var tb = $('clist'); tb.innerHTML = '';
+  /* biggest area first — the same order they will be sewn in */
+  var order = quant.palette.map(function (rgb, i) { return i; })
+    .filter(function (i) { return quant.counts[i] > 0; })
+    .sort(function (a, b) { return quant.counts[b] - quant.counts[a]; });
+
+  order.forEach(function (lab) {
+    var rgb = quant.palette[lab];
+    var hex = '#' + rgb.map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join('');
+    var tr = document.createElement('tr');
+
+    var td1 = document.createElement('td');
+    var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = hex;
+    td1.appendChild(sw); tr.appendChild(td1);
+
+    var td2 = document.createElement('td');
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = (bgSet.indexOf(lab) >= 0);
+    cb.title = 'this is the shirt / background colour — leave it unstitched';
+    cb.onchange = function () {
+      var at = bgSet.indexOf(lab);
+      if (cb.checked && at < 0) bgSet.push(lab);
+      if (!cb.checked && at >= 0) bgSet.splice(at, 1);
+      recolour(); redo();
+    };
+    td2.appendChild(cb);
+    td2.appendChild(document.createTextNode(' garment'));
+    tr.appendChild(td2);
+
+    var td3 = document.createElement('td');
+    if (bgSet.indexOf(lab) >= 0) {
+      td3.innerHTML = '<span style="color:var(--muted)">not stitched</span>';
+    } else {
+      var sel = document.createElement('select');
+      var chosen = overrides[lab] || S.nearestThread(rgb);
+      var opts = [];
+      for (var i = 1; i < S.JEF_THREADS.length; i++) opts.push(S.threadInfo(i));
+      opts.sort(function (a, b) {
+        return S.colourDist(rgb[0], rgb[1], rgb[2], a.rgb[0], a.rgb[1], a.rgb[2]) -
+               S.colourDist(rgb[0], rgb[1], rgb[2], b.rgb[0], b.rgb[1], b.rgb[2]);
+      });
+      opts.forEach(function (t) {
+        var o = document.createElement('option');
+        o.value = t.index; o.textContent = t.name + '  (no. ' + t.code + ')';
+        if (t.index === chosen) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.onchange = function () { overrides[lab] = +sel.value; redo(); };
+      td3.appendChild(sel);
+    }
+    tr.appendChild(td3);
+    tb.appendChild(tr);
+  });
+}
+
+/* ------------------------------ options ---------------------------- */
+
+function widthMm() {
+  var v = parseFloat($('w').value) || 1;
+  return $('unit').value === 'in' ? v * 25.4 : v;
+}
+
+function options() {
+  return {
+    quantised: quant,
+    backgroundLabels: bgSet,
+    widthMm: widthMm(),
+    colours: +$('k').value,
+    spacingMm: (+$('dens').value) / 100,
+    maxStitchMm: parseFloat($('maxst').value) || 4,
+    angleDeg: parseFloat($('ang').value) || 0,
+    underlay: $('under').checked,
+    outline: $('outl').checked,
+    trims: $('trim').checked,
+    overlapMm: parseFloat($('ovl').value) || 0,
+    threadOverride: overrides
+  };
+}
+
+/* ------------------------------- run ------------------------------- */
+
+var timer = null;
+function redo() {
+  if (!img) return;
+  clearTimeout(timer);
+  $('busy').classList.add('on');
+  timer = setTimeout(function () {
+    try {
+      plan  = S.planDesign(img, options());
+      built = S.buildStitches(plan);
+      lastBytes = built.threads.length ? S.encodeJEF(built, { trims: $('trim').checked }) : null;
+    } catch (err) {
+      console.error(err);
+      $('notes').innerHTML = '<div class="note bad">Something went wrong working out the stitches: ' +
+        String(err.message || err) + '</div>';
+      lastBytes = null;
+    }
+    $('busy').classList.remove('on');
+    draw(); showStats(); showNotes();
+    $('save').disabled = !lastBytes;
+    $('savepng').disabled = !lastBytes;
+  }, 30);
+}
+
+['w', 'unit', 'k', 'dens', 'maxst', 'ang', 'under', 'outl', 'trim', 'ovl', 'hoop', 'showjump']
+  .forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      $('kv').textContent = $('k').value;
+      $('densv').textContent = ((+$('dens').value) / 100).toFixed(2);
+      if (id === 'k') { recolour(); }
+      redo();
+    });
+  });
+
+/* ------------------------------ preview ---------------------------- */
+
+function draw() {
+  var cv = $('cv'), g = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+
+  /* show it against the garment colour, so it reads the way it will look sewn */
+  var bgc = '#2a2a2a';
+  if (quant && bgSet.length) {
+    var b = quant.palette[bgSet[0]];
+    bgc = 'rgb(' + b[0] + ',' + b[1] + ',' + b[2] + ')';
+  }
+  g.fillStyle = bgc; g.fillRect(0, 0, W, H);
+  if (!plan || !built) return;
+
+  var sum = S.summarise(built);
+  var pad = 34;
+  var sc = Math.min((W - pad * 2) / Math.max(sum.widthMm, 1), (H - pad * 2) / Math.max(sum.heightMm, 1));
+
+  var minX = Infinity, minY = Infinity;
+  built.stitches.forEach(function (s) {
+    if (s.cmd !== 'stitch') return;
+    if (s.x < minX) minX = s.x; if (s.y < minY) minY = s.y;
+  });
+  if (!isFinite(minX)) return;
+  var offX = (W - sum.widthMm * sc) / 2, offY = (H - sum.heightMm * sc) / 2;
+  function PX(x) { return offX + (x - minX) * sc; }
+  function PY(y) { return offY + (y - minY) * sc; }
+
+  var showJ = $('showjump').checked;
+  var ti = 0, colour = '#fff', prev = null;
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.lineWidth = Math.max(0.8, sc * 0.4);   /* real thread is ~0.4 mm wide */
+
+  function threadCss(i) {
+    var t = S.threadInfo(built.threads[i]);
+    return 'rgb(' + t.rgb[0] + ',' + t.rgb[1] + ',' + t.rgb[2] + ')';
+  }
+  colour = built.threads.length ? threadCss(0) : '#fff';
+
+  built.stitches.forEach(function (s) {
+    if (s.cmd === 'color') { ti++; colour = threadCss(Math.min(ti, built.threads.length - 1)); prev = s; return; }
+    if (s.cmd === 'trim' || s.cmd === 'end') { return; }
+    if (s.cmd === 'jump') {
+      if (showJ && prev) {
+        g.strokeStyle = 'rgba(255,255,255,.42)';
+        g.lineWidth = 0.7; g.setLineDash([3, 3]);
+        g.beginPath(); g.moveTo(PX(prev.x), PY(prev.y)); g.lineTo(PX(s.x), PY(s.y)); g.stroke();
+        g.setLineDash([]); g.lineWidth = Math.max(0.8, sc * 0.4);   /* real thread is ~0.4 mm wide */
+      }
+      prev = s; return;
+    }
+    if (prev && prev.cmd !== 'jump' && prev.cmd !== 'color') {
+      g.strokeStyle = colour;
+      g.beginPath(); g.moveTo(PX(prev.x), PY(prev.y)); g.lineTo(PX(s.x), PY(s.y)); g.stroke();
+    }
+    prev = s;
+  });
+}
+
+function showStats() {
+  if (!built) { $('stats').innerHTML = ''; return; }
+  var s = S.summarise(built);
+  function inch(mm) { return (mm / 25.4).toFixed(2); }
+  $('stats').innerHTML = [
+    ['stitches', s.stitches.toLocaleString()],
+    ['colours', s.colours],
+    ['size', s.widthMm.toFixed(0) + ' × ' + s.heightMm.toFixed(0) + ' mm'],
+    ['', inch(s.widthMm) + ' × ' + inch(s.heightMm) + ' in'],
+    ['roughly', s.minutes + ' min']
+  ].map(function (p) {
+    return '<div class="stat"><b>' + p[1] + '</b><span>' + p[0] + '</span></div>';
+  }).join('');
+}
+
+function showNotes() {
+  var out = [];
+  if (plan) {
+    var seen = {};
+    plan.notes.forEach(function (n) {
+      var key = n.kind + n.text;
+      if (seen[key]) return; seen[key] = 1;
+      var hex = '#' + n.rgb.map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join('');
+      out.push('<div class="note"><span class="dot" style="background:' + hex + '"></span>' + n.text + '</div>');
+    });
+  }
+  if (built) {
+    var s = S.summarise(built);
+    var hp = $('hoop').value.split(',');
+    if (s.widthMm > +hp[0] || s.heightMm > +hp[1]) {
+      out.push('<div class="note bad">This design is ' + s.widthMm.toFixed(0) + ' × ' +
+        s.heightMm.toFixed(0) + ' mm, which is bigger than the ' + hp[0] + ' × ' + hp[1] +
+        ' mm hoop. Make the finished width smaller, or choose a bigger hoop.</div>');
+    }
+    if (!s.stitches) {
+      out.push('<div class="note bad">Nothing to stitch. Check that the right colour is ticked as ' +
+        'the garment, and that the design is big enough.</div>');
+    }
+  }
+  $('notes').innerHTML = out.join('');
+}
+
+/* ------------------------------- save ------------------------------ */
+
+function saveBlob(blob, filename) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+$('save').onclick = function () {
+  if (!lastBytes) return;
+  saveBlob(new Blob([lastBytes], { type: 'application/octet-stream' }), srcName + '.jef');
+};
+$('savepng').onclick = function () {
+  $('cv').toBlob(function (b) { saveBlob(b, srcName + '-preview.png'); });
+};
+
+})();
+</script>
+</body>
+</html>
