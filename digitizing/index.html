@@ -127,6 +127,9 @@
           <span><input type="number" id="ang" value="0" min="0" max="179" step="5">&deg;</span></label>
         <label class="row"><span>Underlay (stops puckering)</span><input type="checkbox" id="under" checked></label>
         <label class="row"><span>Outline each shape</span><input type="checkbox" id="outl" checked></label>
+        <label class="row"><span>Bold lines (sew drawn lines 3&times;)</span><input type="checkbox" id="bold"></label>
+        <label class="row"><span>Stitch length along a line</span>
+          <span><input type="number" id="linestep" value="2" min="1" max="5" step="0.25"> mm</span></label>
         <label class="row"><span>Trim thread on long jumps</span><input type="checkbox" id="trim" checked></label>
         <label class="row"><span>Colour overlap</span>
           <span><input type="number" id="ovl" value="0.3" min="0" max="1.5" step="0.05"> mm</span></label>
@@ -840,6 +843,41 @@ function enforceMaxStitch(pts, maxLen) {
   return out;
 }
 
+/* Walk a drawn line, planting a stitch every stepMm. This is how outline
+ * artwork gets sewn: the thread traces the line, the way a pen would.
+ * `closed` says whether to come back round to the start. */
+function runningStitchPath(pts, closed, stepMm) {
+  var n = pts.length;
+  if (n < 2) return [];
+  var out = [pts[0].slice()], acc = 0;
+  var segs = closed ? n : n - 1;
+  for (var i = 0; i < segs; i++) {
+    var p = pts[i], q = pts[(i + 1) % n];
+    var dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy);
+    if (len < 1e-9) continue;
+    var pos = 0;
+    while (acc + (len - pos) >= stepMm) {
+      pos += stepMm - acc; acc = 0;
+      out.push([p[0] + dx * pos / len, p[1] + dy * pos / len]);
+    }
+    acc += len - pos;
+  }
+  /* always finish exactly on the end of the line, not a step short */
+  var end = closed ? pts[0] : pts[n - 1];
+  var last = out[out.length - 1];
+  if (Math.hypot(end[0] - last[0], end[1] - last[1]) > 1e-6) out.push(end.slice());
+  return out;
+}
+
+/* Sew the line three times over. A single pass of running stitch is one
+ * thread thin, which can look faint; three passes give a bolder line
+ * without needing a satin column. */
+function boldenLine(pts) {
+  if (pts.length < 2) return pts;
+  var back = pts.slice().reverse().slice(1);
+  return pts.concat(back).concat(pts.slice(1));
+}
+
 /* Drop stitches that land almost on top of the previous one. Very short
  * stitches jam the machine and can snap needles, so this matters. */
 function dropTinyStitches(pts, minMm) {
@@ -866,6 +904,8 @@ var DEFAULTS = {
   underlay:      true,
   underlaySpacingMm: 2.5,
   outline:       true,
+  lineStepMm:    2.0,   /* stitch length along a drawn line */
+  boldLines:     false, /* sew each drawn line three times over */
   outlineStepMm: 1.8,
   overlapMm:     0.3,   /* how far colours grow into each other */
   insetMm:       0.15,
@@ -983,6 +1023,13 @@ function generateRuns(blocks, opt) {
         reg.holes.forEach(function (hl) { bk.runs.push(runningStitch(hl, opt.outlineStepMm)); });
       }
     });
+
+    /* drawn lines from an SVG's strokes — outline artwork lives here */
+    (bk.lines || []).forEach(function (ln) {
+      var run = runningStitchPath(ln.pts, ln.closed, opt.lineStepMm);
+      if (run.length > 1) bk.runs.push(opt.boldLines ? boldenLine(run) : run);
+    });
+
     bk.runs = bk.runs
       .map(function (r) { return dropTinyStitches(r, opt.minStitchMm); })
       .map(function (r) { return enforceMaxStitch(r, opt.maxStitchMm); })
@@ -1032,8 +1079,12 @@ function guessVectorBackground(shapes) {
   return [key];
 }
 
-function planShapes(shapes, userOpt) {
+function planShapes(input, userOpt) {
   var opt = Object.assign({}, DEFAULTS, userOpt || {});
+  /* accepts either a plain array of shapes or the whole import result */
+  var shapes  = Array.isArray(input) ? input : (input && input.shapes  ? input.shapes  : []);
+  var strokes = Array.isArray(input) ? (opt.strokes || [])
+                                     : (input && input.strokes ? input.strokes : []);
   var notes = [], THIN_MM = opt.thinWarnMm || 1.2;
   var skip = opt.skipColours || guessVectorBackground(shapes);
 
@@ -1043,14 +1094,14 @@ function planShapes(shapes, userOpt) {
   var measured = shapes.filter(function (s) { return skip.indexOf(rgbKey(s.rgb)) < 0; });
   if (!measured.length) measured = shapes;
   var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  measured.forEach(function (s) {
-    s.rings.forEach(function (r) {
-      r.forEach(function (p) {
-        if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
-        if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
-      });
+  function span(pts) {
+    pts.forEach(function (p) {
+      if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+      if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
     });
-  });
+  }
+  measured.forEach(function (s) { s.rings.forEach(span); });
+  strokes.forEach(function (s) { if (skip.indexOf(rgbKey(s.rgb)) < 0) span(s.pts); });
   if (!isFinite(x0)) return { blocks: [], notes: [{ kind: 'empty', text: 'Nothing in that drawing could be stitched.' }], opt: opt };
   var scale = opt.widthMm / Math.max(x1 - x0, 1e-6);
   function toMm(p) { return [(p[0] - x0) * scale, (p[1] - y0) * scale]; }
@@ -1058,10 +1109,16 @@ function planShapes(shapes, userOpt) {
   /* one block per distinct fill colour, kept in drawing order so that
    * anything painted on top is also stitched on top */
   var byColour = {}, order = [];
+  function block(rgb) {
+    var key = rgbKey(rgb);
+    if (!byColour[key]) { byColour[key] = { rgb: rgb, regions: [], lines: [], areaMm2: 0 }; order.push(key); }
+    return byColour[key];
+  }
+
   shapes.forEach(function (s) {
     if (skip.indexOf(rgbKey(s.rgb)) >= 0) return;
     var key = rgbKey(s.rgb);
-    if (!byColour[key]) { byColour[key] = { rgb: s.rgb, regions: [], areaMm2: 0 }; order.push(key); }
+    block(s.rgb);
     /* group rings shape by shape: two separate dots inside a ring are not
      * holes in it, but a letter's counter is */
     groupRings(s.rings).forEach(function (reg) {
@@ -1072,10 +1129,26 @@ function planShapes(shapes, userOpt) {
     });
   });
 
+  /* drawn lines join the block of the same colour, so one thread sews both */
+  var wideLines = 0;
+  strokes.forEach(function (s) {
+    if (skip.indexOf(rgbKey(s.rgb)) >= 0) return;
+    var b = block(s.rgb);
+    var widthMm = (s.widthUnits || 1) * scale;
+    if (widthMm > 2) wideLines++;
+    b.lines.push({ pts: s.pts.map(toMm), closed: s.closed, widthMm: widthMm });
+  });
+  if (wideLines) {
+    notes.push({ kind: 'wideline', count: wideLines,
+      text: wideLines + ' line(s) are drawn thicker than 2 mm. They are sewn as a single ' +
+            'line of stitching, so they will come out finer than they look on screen. ' +
+            'Tick "bold lines" to sew them three times over.' });
+  }
+
   var blocks = [];
   order.forEach(function (key) {
     var b = byColour[key];
-    if (!b.regions.length) return;
+    if (!b.regions.length && !b.lines.length) return;
     var thin = b.regions.filter(function (r) { return r.avgWidthMm < THIN_MM; }).length;
     if (thin) {
       notes.push({ kind: 'thin', rgb: b.rgb, count: thin,
@@ -1083,7 +1156,7 @@ function planShapes(shapes, userOpt) {
               ' mm. Thread cannot hold detail that fine — make the design bigger or simplify it.' });
     }
     blocks.push({
-      label: key, rgb: b.rgb, regions: b.regions, areaMm2: b.areaMm2,
+      label: key, rgb: b.rgb, regions: b.regions, lines: b.lines, areaMm2: b.areaMm2,
       thread: (opt.threadOverride && opt.threadOverride[key]) || nearestThread(b.rgb)
     });
   });
@@ -1332,6 +1405,7 @@ var API = {
   traceContours: traceContours, simplify: simplify, signedArea: signedArea,
   pointInPoly: pointInPoly, ringLength: ringLength, maskToRegions: maskToRegions,
   fillRegion: fillRegion, runningStitch: runningStitch, splitRun: splitRun, enforceMaxStitch: enforceMaxStitch,
+  runningStitchPath: runningStitchPath, boldenLine: boldenLine,
   planDesign: planDesign, planShapes: planShapes, guessVectorBackground: guessVectorBackground, generateRuns: generateRuns,
   groupRings: groupRings, describeRegion: describeRegion, rgbKey: rgbKey,
   buildStitches: buildStitches,
@@ -1601,12 +1675,18 @@ function flattenArc(p0, rx, ry, rot, largeArc, sweep, p1, tol, out) {
 function parsePath(d, tol) {
   tol = tol || 0.25;
   var toks = String(d).match(/[MmLlHhVvCcSsQqTtAaZz]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) || [];
-  var i = 0, rings = [], cur = null, pt = [0, 0], start = [0, 0], cmd = null;
+  var i = 0, subs = [], cur = null, pt = [0, 0], start = [0, 0], cmd = null;
   var lastC = null, lastQ = null;
 
   function num() { return parseFloat(toks[i++]); }
   function flag() { var t = toks[i++]; return t === '1' || parseFloat(t) === 1; }
-  function begin() { if (cur && cur.length > 1) rings.push(cur); cur = [pt.slice()]; }
+  /* whether a subpath was closed with Z matters for strokes: an open line
+   * must not be sewn back round to its start */
+  function flush(closed) {
+    if (cur && cur.length >= 2) subs.push({ pts: cur, closed: !!closed });
+    cur = null;
+  }
+  function begin() { flush(false); cur = [pt.slice()]; }
 
   while (i < toks.length) {
     if (/[A-Za-z]/.test(toks[i])) { cmd = toks[i++]; }
@@ -1666,7 +1746,7 @@ function parsePath(d, tol) {
         break;
       }
       case 'Z':
-        if (cur && cur.length > 1) { rings.push(cur); }
+        flush(true);
         pt = start.slice(); cur = [pt.slice()]; lastC = lastQ = null;
         break;
       default:
@@ -1674,8 +1754,14 @@ function parsePath(d, tol) {
     }
     if (!cur) cur = [pt.slice()];
   }
-  if (cur && cur.length > 2) rings.push(cur);
-  return rings;
+  flush(false);
+  return subs;
+}
+
+/* Most callers only want the closed outlines to fill. */
+function parsePathRings(d, tol) {
+  return parsePath(d, tol).map(function (s) { return s.pts; })
+    .filter(function (p) { return p.length > 2; });
 }
 
 /* ------------------------- primitive shapes ------------------------ */
@@ -1692,10 +1778,22 @@ function ellipseRing(cx, cy, rx, ry, tol) {
   return out;
 }
 
+/* Every drawable element as a list of subpaths, each flagged open or
+ * closed. Closed ones can be filled; open ones can only be sewn as lines. */
+function shapeSubpaths(node, tol) {
+  return shapeRings(node, tol).map(function (r) {
+    return Array.isArray(r) ? { pts: r, closed: true } : r;
+  });
+}
+
 function shapeRings(node, tol) {
   var a = node.attrs;
   switch (node.tag) {
     case 'path':    return parsePath(a.d || '', tol);
+    case 'line': {
+      var pts = [[num(a.x1), num(a.y1)], [num(a.x2), num(a.y2)]];
+      return (pts[0][0] === pts[1][0] && pts[0][1] === pts[1][1]) ? [] : [{ pts: pts, closed: false }];
+    }
     case 'rect': {
       var x = num(a.x), y = num(a.y), w = num(a.width), h = num(a.height);
       if (w <= 0 || h <= 0) return [];
@@ -1721,9 +1819,11 @@ function shapeRings(node, tol) {
     case 'polygon':
     case 'polyline': {
       var nums = (a.points || '').split(/[\s,]+/).filter(function (t) { return t.length; }).map(Number);
-      var pts = [];
-      for (var i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
-      return pts.length > 2 ? [pts] : [];
+      var pl = [];
+      for (var i = 0; i + 1 < nums.length; i += 2) pl.push([nums[i], nums[i + 1]]);
+      if (pl.length < 2) return [];
+      /* a polyline is an open line; a polygon is a closed outline */
+      return [{ pts: pl, closed: node.tag === 'polygon' }];
     }
     default: return [];
   }
@@ -1746,7 +1846,7 @@ function importSVG(source, opt) {
     for (var k in r) css[k] = r[k];
   });
 
-  var notes = [], shapes = [], warned = {}, strokeOnly = 0;
+  var notes = [], shapes = [], strokes = [], warned = {}, strokeOnly = 0;
   function warn(kind, text) { if (!warned[kind]) { warned[kind] = 1; notes.push({ kind: kind, text: text }); } }
 
   var tol = opt.curveTolerance || 0.2;
@@ -1792,31 +1892,37 @@ function importSVG(source, opt) {
       if (ch.tag === 'use')   { warn('use', 'This SVG re-uses shapes with <use>, which is not supported yet. Those parts were skipped.'); continue; }
 
       if (SHAPES[ch.tag]) {
+        var subs = shapeSubpaths(ch, tol).map(function (s) {
+          return { pts: s.pts.map(function (p) { return applyMat(m, p); }), closed: s.closed };
+        });
+
+        /* ---- filled areas ---- */
         var raw = st.fill;
         if (raw === undefined) raw = '#000000';            /* SVG default fill is black */
-        if (String(raw).trim().toLowerCase().indexOf('url(') === 0) {
+        var gradientFill = String(raw).trim().toLowerCase().indexOf('url(') === 0;
+        if (gradientFill) {
           warn('gradient', 'Some shapes use a gradient or pattern fill. Embroidery cannot blend ' +
                            'colours, so those shapes were skipped — flatten them to solid colours first.');
-          continue;
         }
-        var rgb = parseColour(raw);
-        if (!rgb) {
-          /* fill:none. If it is drawn with a stroke, the shape is a line
-           * rather than an area — we only stitch areas, so say so plainly
-           * instead of letting it vanish. */
-          if (parseColour(st.stroke)) {
-            strokeOnly++;
-            warn('stroke', 'Parts of this drawing are outlines (lines) rather than filled ' +
-                           'shapes, and only filled shapes can be stitched. In your drawing ' +
-                           'program select them and use "Outline Stroke" / "Stroke to Path" — ' +
-                           'that turns each line into a thin filled shape — then save again.');
-          }
-          continue;
+        var rgb = gradientFill ? null : parseColour(raw);
+        if (rgb) {
+          var rings = subs.map(function (s) { return s.pts; })
+                          .filter(function (r) { return r.length > 2; });
+          if (rings.length) shapes.push({ rings: rings, rgb: rgb, fillRule: (st['fill-rule'] || 'nonzero').trim() });
         }
-        var rings = shapeRings(ch, tol)
-          .map(function (r) { return r.map(function (p) { return applyMat(m, p); }); })
-          .filter(function (r) { return r.length > 2; });
-        if (rings.length) shapes.push({ rings: rings, rgb: rgb, fillRule: (st['fill-rule'] || 'nonzero').trim() });
+
+        /* ---- drawn lines ---- */
+        var srgb = parseColour(st.stroke);
+        if (srgb) {
+          /* a transform can scale the drawing, and the stroke with it */
+          var sc = Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2])) || 1;
+          var swRaw = parseFloat(st['stroke-width']);
+          var sw = (isNaN(swRaw) ? 1 : swRaw) * sc;
+          subs.forEach(function (s) {
+            if (s.pts.length >= 2) strokes.push({ pts: s.pts, closed: s.closed, rgb: srgb, widthUnits: sw });
+          });
+          if (!rgb) strokeOnly++;
+        }
         continue;
       }
       walk(ch, m, st);                                      /* <g> and anything else */
@@ -1824,10 +1930,10 @@ function importSVG(source, opt) {
   }
 
   walk(svg, IDENT, {});
-  if (!shapes.length && !notes.length) {
-    notes.push({ kind: 'empty', text: 'No filled shapes were found in that SVG.' });
+  if (!shapes.length && !strokes.length && !notes.length) {
+    notes.push({ kind: 'empty', text: 'Nothing that could be stitched was found in that SVG.' });
   }
-  return { shapes: shapes, notes: notes, strokeOnly: strokeOnly };
+  return { shapes: shapes, strokes: strokes, notes: notes, strokeOnly: strokeOnly };
 }
 
 function findTag(node, tag) {
@@ -1849,7 +1955,8 @@ function collect(node, tag, out) {
 var API = {
   importSVG: importSVG, parseXML: parseXML, parsePath: parsePath,
   parseTransform: parseTransform, parseColour: parseColour, parseCSS: parseCSS,
-  matMul: matMul, applyMat: applyMat, shapeRings: shapeRings
+  matMul: matMul, applyMat: applyMat, shapeRings: shapeRings,
+  shapeSubpaths: shapeSubpaths, parsePathRings: parsePathRings
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -1866,7 +1973,7 @@ var $ = function (id) { return document.getElementById(id); };
 
 var mode = null;         /* 'bitmap' (png/screenshot) or 'vector' (svg) */
 var img = null;          /* ImageData, already scaled down for speed */
-var shapes = null;       /* imported SVG outlines */
+var imported = null;     /* the whole SVG import: filled shapes + drawn lines */
 var svgNotes = [];
 var srcName = 'design';
 var quant = null;        /* cached quantisation, keyed by colour count */
@@ -1931,19 +2038,24 @@ function loadSVG(file) {
   var fr = new FileReader();
   fr.onload = function () {
     var res = SvgImport.importSVG(fr.result);
-    if (!res.shapes.length) {
-      shapes = null; mode = null;
+    if (!res.shapes.length && !res.strokes.length) {
+      imported = null; mode = null;
       $('imginfo').textContent = '';
       $('notes').innerHTML = '<div class="note bad">' +
-        (res.notes[0] ? res.notes[0].text : 'No filled shapes were found in that SVG.') + '</div>';
+        (res.notes[0] ? res.notes[0].text : 'Nothing that could be stitched was found in that SVG.') + '</div>';
       $('clist').innerHTML = ''; $('save').disabled = true; $('savepng').disabled = true;
       return;
     }
-    mode = 'vector'; shapes = res.shapes; svgNotes = res.notes;
-    img = null; quant = null; quantK = -1; overrides = {}; bgSet = [];
+    mode = 'vector'; imported = res; svgNotes = res.notes;
+    img = null; quant = null; quantK = -1; overrides = {};
+    bgSet = S.guessVectorBackground(res.shapes);
     var colours = {};
-    shapes.forEach(function (s) { colours[S.rgbKey(s.rgb)] = 1; });
-    $('imginfo').textContent = 'SVG — ' + shapes.length + ' shape' + (shapes.length === 1 ? '' : 's') +
+    res.shapes.forEach(function (s) { colours[S.rgbKey(s.rgb)] = 1; });
+    res.strokes.forEach(function (s) { colours[S.rgbKey(s.rgb)] = 1; });
+    var bits = [];
+    if (res.shapes.length)  bits.push(res.shapes.length + ' filled shape' + (res.shapes.length === 1 ? '' : 's'));
+    if (res.strokes.length) bits.push(res.strokes.length + ' drawn line' + (res.strokes.length === 1 ? '' : 's'));
+    $('imginfo').textContent = 'SVG — ' + bits.join(', ') +
       ', ' + Object.keys(colours).length + ' colour' + (Object.keys(colours).length === 1 ? '' : 's') +
       ' (exact, nothing guessed)';
     recolour(); redo();
@@ -1956,11 +2068,16 @@ function loadSVG(file) {
 function paletteRows() {
   if (mode === 'vector') {
     var seen = {}, rows = [];
-    shapes.forEach(function (s) {
-      var key = S.rgbKey(s.rgb);
-      if (!seen[key]) { seen[key] = { label: key, rgb: s.rgb, weight: 0 }; rows.push(seen[key]); }
-      s.rings.forEach(function (r) { seen[key].weight += Math.abs(S.signedArea(r)); });
+    function row(rgb) {
+      var key = S.rgbKey(rgb);
+      if (!seen[key]) { seen[key] = { label: key, rgb: rgb, weight: 0 }; rows.push(seen[key]); }
+      return seen[key];
+    }
+    imported.shapes.forEach(function (s) {
+      var r = row(s.rgb);
+      s.rings.forEach(function (ring) { r.weight += Math.abs(S.signedArea(ring)); });
     });
+    imported.strokes.forEach(function (s) { row(s.rgb).weight += S.ringLength(s.pts); });
     return rows;
   }
   if (!quant) return [];
@@ -2064,6 +2181,8 @@ function options() {
     angleDeg: parseFloat($('ang').value) || 0,
     underlay: $('under').checked,
     outline: $('outl').checked,
+    boldLines: $('bold').checked,
+    lineStepMm: parseFloat($('linestep').value) || 2,
     trims: $('trim').checked,
     overlapMm: parseFloat($('ovl').value) || 0,
     threadOverride: overrides
@@ -2079,7 +2198,7 @@ function redo() {
   $('busy').classList.add('on');
   timer = setTimeout(function () {
     try {
-      plan  = (mode === 'vector') ? S.planShapes(shapes, options())
+      plan  = (mode === 'vector') ? S.planShapes(imported, options())
                                   : S.planDesign(img, options());
       if (mode === 'vector' && svgNotes.length) plan.notes = svgNotes.concat(plan.notes);
       built = S.buildStitches(plan);
@@ -2097,7 +2216,8 @@ function redo() {
   }, 30);
 }
 
-['w', 'unit', 'k', 'dens', 'maxst', 'ang', 'under', 'outl', 'trim', 'ovl', 'hoop', 'showjump']
+['w', 'unit', 'k', 'dens', 'maxst', 'ang', 'under', 'outl', 'trim', 'ovl', 'hoop', 'showjump',
+  'bold', 'linestep']
   .forEach(function (id) {
     $(id).addEventListener('input', function () {
       if (mode !== 'vector') $('kv').textContent = $('k').value;
@@ -2114,7 +2234,17 @@ function draw() {
   var W = cv.width, H = cv.height;
 
   /* show it against the garment colour, so it reads the way it will look sewn */
+  /* With no garment colour chosen, pick a backdrop the thread will show
+   * against — dark thread on a dark preview is unreadable. */
   var bgc = '#2a2a2a';
+  if (!bgSet.length && built && built.threads.length) {
+    var lum = 0;
+    built.threads.forEach(function (t) {
+      var c = S.threadInfo(t).rgb;
+      lum += (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+    });
+    if (lum / built.threads.length < 0.5) bgc = '#e9e6e0';
+  }
   if (bgSet.length) {
     /* bitmap labels are cluster indices; vector labels are "r,g,b" keys */
     var b = (mode === 'vector') ? String(bgSet[0]).split(',').map(Number)
