@@ -126,15 +126,34 @@
         <label class="row"><span>Fill angle</span>
           <span><input type="number" id="ang" value="0" min="0" max="179" step="5">&deg;</span></label>
         <label class="row"><span>Underlay (stops puckering)</span><input type="checkbox" id="under" checked></label>
+        <label class="row"><span>Smooth bands on narrow shapes &amp; thick lines</span><input type="checkbox" id="satin" checked></label>
+        <label class="row"><span>Widest smooth band</span>
+          <span><input type="number" id="satmax" value="7" min="2" max="10" step="0.5"> mm</span></label>
         <label class="row"><span>Outline each shape</span><input type="checkbox" id="outl" checked></label>
-        <label class="row"><span>Bold lines (sew drawn lines 3&times;)</span><input type="checkbox" id="bold"></label>
-        <label class="row"><span>Stitch length along a line</span>
+        <label class="row"><span>Drawn line weight</span>
+          <select id="linew">
+            <option value="1" selected>Fine &mdash; one pass</option>
+            <option value="3">Bold &mdash; three passes</option>
+            <option value="5">Extra bold &mdash; five passes</option>
+          </select></label>
+        <label class="row"><span>Longest stitch along a line</span>
           <span><input type="number" id="linestep" value="2" min="1" max="5" step="0.25"> mm</span></label>
         <label class="row"><span>Trim thread on long jumps</span><input type="checkbox" id="trim" checked></label>
         <label class="row"><span>Colour overlap</span>
           <span><input type="number" id="ovl" value="0.3" min="0" max="1.5" step="0.05"> mm</span></label>
         <div class="hint">Lower density number = more thread and a solider look. Overlap stops
           gaps of bare fabric showing between two colours.</div>
+        <div class="hint">A drawn line is walked with a <b>longer stitch on the straights and a
+          shorter one round bends</b>, so curves come out smooth without wasting thread. Extra
+          passes sew the line back and forth over itself &mdash; this is &ldquo;bean stitch&rdquo;,
+          what bought single-line embroidery fonts use to make a thin line read solidly. Each
+          pass is offset slightly so the needle does not punch the same hole over and over.</div>
+        <div class="hint">A <b>smooth band</b> is what proper embroidery uses for lettering,
+          thin shapes and thick outlines: the thread crosses the shape instead of filling it
+          in rows, so it comes out glossy rather than flat. Only shapes that really are a
+          simple band are done this way &mdash; anything else is filled as before. Shapes
+          wider than the figure above are filled too, because one stitch that long would
+          snag.</div>
       </details>
     </div>
   </div>
@@ -898,16 +917,712 @@ function boldenLine(pts) {
 }
 
 /* Drop stitches that land almost on top of the previous one. Very short
- * stitches jam the machine and can snap needles, so this matters. */
+ * stitches jam the machine and can snap needles, so this matters.
+ *
+ * A short step is only safe to drop where the thread carries straight on
+ * through it. At a CORNER the point is the shape: the turn at the end of
+ * a fill row is one row-spacing long, shorter than the minimum, and
+ * deleting it cut the corner off and left a bare sliver of fabric running
+ * down both edges of every filled shape. Corners are kept. */
+/* The tightest stitch this tool will ever write. A fill's row turn is one
+ * row-spacing long and has to survive, and the densest the page allows is
+ * 0.30 mm, so the floor sits just below that. Anything shorter than this
+ * is a rounding artefact rather than part of the shape, and the .jef
+ * format could not express it accurately anyway — it stores tenths of a
+ * millimetre. */
+var MIN_STITCH_FLOOR_MM = 0.25;
+
 function dropTinyStitches(pts, minMm) {
   if (pts.length < 2) return pts;
   var out = [pts[0]];
   for (var i = 1; i < pts.length - 1; i++) {
-    var last = out[out.length - 1];
-    if (Math.hypot(pts[i][0] - last[0], pts[i][1] - last[1]) >= minMm) out.push(pts[i]);
+    var last = out[out.length - 1], p = pts[i], nxt = pts[i + 1];
+    var ax = p[0] - last[0], ay = p[1] - last[1], la = Math.hypot(ax, ay);
+    if (la >= minMm) { out.push(p); continue; }
+    if (la < MIN_STITCH_FLOOR_MM) continue;   /* too short to be real shape */
+    var bx = nxt[0] - p[0], by = nxt[1] - p[1], lb = Math.hypot(bx, by);
+    /* cos of the turn; below about 0.9 is a bend of more than 25 degrees,
+     * which is a corner rather than a redundant point along a straight */
+    if (lb > 1e-9 && (ax * bx + ay * by) / (la * lb) < 0.9) out.push(p);
   }
-  out.push(pts[pts.length - 1]);
+  /* A run has to finish exactly on the end of its shape, so the last point
+   * is never simply dropped — instead every point it would crowd against
+   * is removed and it takes their place.
+   *
+   * Removing just ONE was not enough: the gap from the end to whatever was
+   * two back could be shorter still, which is how a 0.22 mm stitch got
+   * into a design whose floor is 0.25 mm. */
+  var end = pts[pts.length - 1];
+  function fromTail() {
+    var t = out[out.length - 1];
+    return Math.hypot(end[0] - t[0], end[1] - t[1]);
+  }
+  while (out.length > 1 && fromTail() < MIN_STITCH_FLOOR_MM) out.pop();
+  if (fromTail() >= MIN_STITCH_FLOOR_MM) out.push(end);
   return out;
+}
+
+/* --------------------------- drawn lines --------------------------- */
+/* Everything below follows what a bought single-line embroidery font
+ * actually does. Five letters of one were decoded and measured (see
+ * CLAUDE.md, "What a bought font does"); the numbers there are where the
+ * defaults come from, rather than guesswork.
+ *
+ * Three habits are worth copying, and all three help ordinary line art —
+ * a traced drawing, a clip-art outline — as much as they help lettering:
+ *   - shorten the stitch on a bend and lengthen it on a straight
+ *   - sew a line several times over, back and forth, to make it read
+ *   - anchor the thread at both ends so it cannot pull out
+ */
+
+/* Walk a line, planting a stitch wherever one is needed rather than every
+ * so many millimetres. On a straight the stitches stretch out to the full
+ * length allowed; round a tight bend they shorten, so the thread follows
+ * the curve instead of cutting the corner off it.
+ *
+ * `lineSagMm` is the most the thread is allowed to depart from the drawn
+ * line — the gap between the chord and the curve it is cutting across. */
+function adaptiveLinePath(pts, closed, opt) {
+  var maxStep = Math.max(0.3, opt.lineStepMm || 2.0),
+      minStep = Math.min(Math.max(0.3, opt.lineMinStepMm || 0.9), maxStep),
+      sag     = Math.max(0.01, opt.lineSagMm || 0.1);
+
+  var n = pts.length, lim = closed ? n : n - 1, segs = [], total = 0, i;
+  for (i = 0; i < lim; i++) {
+    var p = pts[i], q = pts[(i + 1) % n], d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    if (d > 1e-12) { segs.push({ p: p, q: q, d: d, s: total }); total += d; }
+  }
+  if (!segs.length) return [];
+
+  function at(s) {
+    if (s <= 0) return segs[0].p.slice();
+    if (s >= total) return segs[segs.length - 1].q.slice();
+    var lo = 0, hi = segs.length - 1;
+    while (lo < hi) { var mid = (lo + hi + 1) >> 1; if (segs[mid].s <= s) lo = mid; else hi = mid - 1; }
+    var g = segs[lo], u = (s - g.s) / g.d;
+    return [g.p[0] + (g.q[0] - g.p[0]) * u, g.p[1] + (g.q[1] - g.p[1]) * u];
+  }
+
+  /* How far the drawn line strays from the straight stitch between two
+   * points on it. The line is already a chain of straight pieces, so the
+   * worst gap is always at one of its corners. */
+  function strays(s0, s1) {
+    var A = at(s0), B = at(s1);
+    var dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy);
+    if (L < 1e-9) return 0;
+    var worst = 0;
+    for (var k = 0; k < segs.length; k++) {
+      var sv = segs[k].s;
+      if (sv <= s0) continue;
+      if (sv >= s1) break;
+      var v = segs[k].p;
+      var off = Math.abs((v[0] - A[0]) * dy - (v[1] - A[1]) * dx) / L;
+      if (off > worst) worst = off;
+    }
+    return worst;
+  }
+
+  var out = [at(0)], s = 0;
+  while (s < total - 1e-9) {
+    var step = Math.min(maxStep, total - s);
+    if (step > minStep && strays(s, s + step) > sag) {
+      var lo = minStep, hi = step;
+      for (var it = 0; it < 8; it++) {
+        var mid = (lo + hi) / 2;
+        if (strays(s, s + mid) > sag) hi = mid; else lo = mid;
+      }
+      step = Math.max(minStep, Math.min(lo, total - s));
+    }
+    s = Math.min(total, s + step);
+    out.push(at(s));
+  }
+  /* finish exactly on the end of the line, not a fraction short */
+  var end = closed ? pts[0] : pts[n - 1], last = out[out.length - 1];
+  if (Math.hypot(end[0] - last[0], end[1] - last[1]) > 1e-6) out.push(end.slice());
+  return out;
+}
+
+/* Bean stitch: sew each step of the line several times over, back and
+ * forth, before moving on. Three passes make a bold line; five is about
+ * what a bought single-line font uses, and is what makes those letters
+ * read as solid at 10 mm tall.
+ *
+ * Each return pass is nudged a little way along the line rather than
+ * dropping back into the hole it has just made. Piercing the same spot
+ * five or six times perforates the fabric — every letter measured spreads
+ * its needle holes instead, and so does this. */
+/* How far apart to keep the needle holes of successive passes. The font
+ * measured spread them by 0.3-0.5 mm; this is the smallest gap allowed,
+ * squeezed up on a very short step so the stitch stays sewable. */
+var BEAN_SPREAD_MM = 0.25;
+
+function beanStitch(pts, passes) {
+  if (pts.length < 2 || !(passes > 1)) return pts;
+  passes = Math.round(passes);
+  if (passes % 2 === 0) passes += 1;      /* odd, so it finishes at the far end */
+  var landB = Math.ceil(passes / 2), landA = Math.floor(passes / 2);
+  var out = [pts[0].slice()];
+
+  for (var i = 1; i < pts.length; i++) {
+    var a = pts[i - 1], b = pts[i];
+    var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+    if (len < 1e-9) continue;
+    /* the furthest any pass is pulled back from the end it is aiming at */
+    var deepest = Math.max(landB - 1, landA);
+    var sep = Math.min(BEAN_SPREAD_MM, len * 0.3 / Math.max(1, deepest));
+    var hitB = 0, hitA = 0;
+
+    for (var k = 1; k <= passes; k++) {
+      var toB = (k % 2) === 1, end, other, back;
+      if (toB) { end = b; other = a; back = sep * (landB - (++hitB)); }
+      else     { end = a; other = b; back = sep * (landA - (++hitA) + 1); }
+      out.push([end[0] + (other[0] - end[0]) * (back / len),
+                end[1] + (other[1] - end[1]) * (back / len)]);
+    }
+  }
+  return out;
+}
+
+/* A run the machine reached by jumping starts with the thread hanging
+ * loose, and one it is about to jump away from ends the same way. Two
+ * short stitches at each end anchor it. Every bought font measured does
+ * this; without it a line of running stitch can pull straight back out
+ * once the thread is cut. */
+function lockAtStart(run, mm) {
+  var a = run[0], b = run[1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (!(mm > 0) || len < mm * 1.5) return [];
+  var t = mm / len;
+  return [[a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], [a[0], a[1]]];
+}
+
+function lockAtEnd(run, mm) {
+  var n = run.length, b = run[n - 1], a = run[n - 2];
+  var len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (!(mm > 0) || len < mm * 1.5) return [];
+  var t = mm / len;
+  return [[b[0] + (a[0] - b[0]) * t, b[1] + (a[1] - b[1]) * t], [b[0], b[1]]];
+}
+
+/* ---------------------------- satin columns ------------------------ */
+/* A satin column is one smooth glossy band: the thread crosses the shape
+ * from one edge to the other instead of running along it. It is what
+ * proper digitizing software sews for lettering, thin shapes and thick
+ * drawn lines, and it is the main thing that separates bought-looking
+ * embroidery from a flat tatami fill.
+ *
+ * Two ways in:
+ *   - a drawn line, where we already know the exact centre and width, so
+ *     the column can simply be swung either side of it;
+ *   - a narrow filled shape, where the two long edges have to be found
+ *     first and then paired up across the shape.
+ *
+ * The second one can go wrong on a shape that is not really a ribbon (a
+ * letter A has a junction; a star has spikes), so every pairing is
+ * checked before it is used and a failed check falls back to the ordinary
+ * fill. Satin is never forced on a shape it does not suit. */
+
+/* Walk a path and return `count` points spread evenly along it by
+ * distance. For a closed path the points wrap and the start is not
+ * repeated at the end; for an open one the first and last points sit
+ * exactly on the ends. */
+function resamplePath(pts, closed, count) {
+  var n = pts.length, lim = closed ? n : n - 1, segs = [], total = 0, i;
+  for (i = 0; i < lim; i++) {
+    var p = pts[i], q = pts[(i + 1) % n], d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    if (d > 1e-12) { segs.push([p, q, d, total]); total += d; }
+  }
+  if (!segs.length || count < 2) return [];
+  var out = [], si = 0, span = closed ? count : count - 1;
+  for (var k = 0; k < count; k++) {
+    var t = total * k / span;
+    if (t > total) t = total;
+    while (si + 1 < segs.length && segs[si][3] + segs[si][2] < t) si++;
+    var s = segs[si], u = (t - s[3]) / s[2];
+    if (u < 0) u = 0; if (u > 1) u = 1;
+    out.push([s[0][0] + (s[1][0] - s[0][0]) * u, s[0][1] + (s[1][1] - s[0][1]) * u]);
+  }
+  if (!closed) out[count - 1] = segs[segs.length - 1][1].slice();
+  return out;
+}
+
+function pathLength(pts, closed) {
+  var n = pts.length, lim = closed ? n : n - 1, total = 0;
+  for (var i = 0; i < lim; i++) {
+    var p = pts[i], q = pts[(i + 1) % n];
+    total += Math.hypot(q[0] - p[0], q[1] - p[1]);
+  }
+  return total;
+}
+
+/* Walk a path, keeping every corner of it as a sample point.
+ *
+ * `resamplePath` spaces points evenly by distance, which slides them past
+ * a corner instead of landing on it: the turn gets shared between two
+ * samples either side and the corner comes out chamfered. A band round a
+ * letter needs a stitch exactly ON each corner, so this walks segment by
+ * segment and always emits the vertices. The spacing between them is only
+ * approximately `step`, which costs nothing — a satin stitch crosses the
+ * band, so its length barely depends on how far it has advanced. */
+function resampleAlong(pts, closed, step, cornerDeg) {
+  var n = pts.length, lim = closed ? n : n - 1, out = [], i, j;
+  var cosLim = Math.cos((cornerDeg === undefined ? 20 : cornerDeg) * Math.PI / 180);
+
+  function dir(a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    return L < 1e-12 ? null : [dx / L, dy / L];
+  }
+
+  for (i = 0; i < lim; i++) {
+    var p = pts[i], qq = pts[(i + 1) % n];
+    var d = Math.hypot(qq[0] - p[0], qq[1] - p[1]);
+    if (d < 1e-12) continue;
+    out.push(p.slice());
+    /* A sharp corner gets its point TWICE. The zigzag only reaches one
+     * edge of the band per point, so from a single sample it stitches one
+     * side of the corner and skips the other — which is what left the
+     * shoulders of the T and the E cut off. Two samples, and it lands on
+     * both. */
+    var into = (closed || i > 0) ? dir(pts[(i - 1 + n) % n], p) : null;
+    var away = dir(p, qq);
+    if (into && away && into[0] * away[0] + into[1] * away[1] < cosLim) out.push(p.slice());
+    var k = Math.max(1, Math.round(d / step));
+    for (j = 1; j < k; j++) {
+      out.push([p[0] + (qq[0] - p[0]) * j / k, p[1] + (qq[1] - p[1]) * j / k]);
+    }
+  }
+  if (!closed && n) out.push(pts[n - 1].slice());
+  return out;
+}
+
+/* The direction across the path at each point, and how far the edge has
+ * to be pushed out there to keep the band its full width.
+ *
+ * On a straight the answer is simply half the width. At a corner it is
+ * more: the outside of a right-angled turn sits 1.41 times half-width
+ * from the centre, and the apex of a letter A three times. Offsetting by
+ * a flat half-width instead cuts every corner off — which is what left
+ * the A with no point and the T and E with rounded shoulders.
+ *
+ * `limit` caps it, because the figure runs away to infinity as a corner
+ * approaches a fold back on itself. Capping it flattens a very sharp point
+ * into a short bevel, which is what the apex of a letter A wants anyway —
+ * uncapped it grows a needle several millimetres long. */
+function pathFrame(s, closed, limit) {
+  var n = s.length, out = [], i;
+  limit = limit || 3.5;
+
+  function seg(a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    return L < 1e-12 ? null : [-dy / L, dx / L];       /* the normal to a->b */
+  }
+
+  /* A corner is sampled twice so the band can stitch both its edges, so
+   * step over any repeated point when looking for the neighbours — taken
+   * literally, a repeat has no direction and the corner loses its mitre. */
+  function near(i, way) {
+    for (var k = 1; k < n; k++) {
+      var j = i + way * k;
+      if (closed) j = ((j % n) + n) % n;
+      else if (j < 0 || j >= n) return null;
+      if (Math.hypot(s[j][0] - s[i][0], s[j][1] - s[i][1]) > 1e-12) return s[j];
+    }
+    return null;
+  }
+
+  for (i = 0; i < n; i++) {
+    var before = near(i, -1), after = near(i, 1);
+    var n1 = (before && seg(before, s[i])) || (after && seg(s[i], after));
+    var n2 = (after && seg(s[i], after)) || n1;
+    if (!n1) { out.push({ n: (out.length ? out[out.length - 1].n : [0, 1]), m: 1 }); continue; }
+
+    var bx = n1[0] + n2[0], by = n1[1] + n2[1], bl = Math.hypot(bx, by);
+    if (bl < 1e-9) { out.push({ n: n1, m: 1 }); continue; }   /* folded right back */
+    var nb = [bx / bl, by / bl];
+    var cos = nb[0] * n1[0] + nb[1] * n1[1];
+    var m = cos > 1e-6 ? 1 / cos : limit;
+    out.push({ n: nb, m: Math.min(limit, Math.max(1, m)) });
+  }
+  return out;
+}
+
+/* The two edges of a column, half its width either side of the centre,
+ * pushed out at the corners so the band keeps its width all the way
+ * round. */
+function offsetEdges(s, closed, halfMm, limit) {
+  var frame = pathFrame(s, closed, limit), A = [], B = [];
+  for (var i = 0; i < s.length; i++) {
+    var d = halfMm * frame[i].m, nn = frame[i].n;
+    A.push([s[i][0] + nn[0] * d, s[i][1] + nn[1] * d]);
+    B.push([s[i][0] - nn[0] * d, s[i][1] - nn[1] * d]);
+  }
+  return { a: A, b: B };
+}
+
+/* Zigzag between two matched edges: one stitch across, advance a little,
+ * one stitch back. Each stitch lays a thread across the band, so the
+ * advance per stitch is what sets how solid the band looks. */
+function zigzag(A, B, closed) {
+  var run = [];
+  for (var i = 0; i < A.length; i++) run.push((i % 2) ? B[i].slice() : A[i].slice());
+  if (closed && run.length) run.push(A[0].slice());
+  return run;
+}
+
+/* How far apart to sample a column's centre or edges.
+ *
+ * `satinSpacingMm` is what it looks like on the fabric: the gap between
+ * neighbouring needle holes down ONE edge of the band. A zigzag only
+ * comes back to the same edge every other stitch, so the path underneath
+ * has to be sampled twice as finely as that. Getting this wrong by a
+ * factor of two leaves a comb of little bare triangles down both edges. */
+function satinStep(opt) {
+  return Math.max(0.05, (opt.satinSpacingMm || 0.4) / 2);
+}
+
+/* How far a point lies from a polyline. */
+function distToPath(p, pts) {
+  var best = Infinity;
+  for (var i = 1; i < pts.length; i++) {
+    var a = pts[i - 1], b = pts[i];
+    var dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+    var t = L2 < 1e-18 ? 0 : ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2;
+    t = Math.max(0, Math.min(1, t));
+    var d = Math.hypot(p[0] - (a[0] + dx * t), p[1] - (a[1] + dy * t));
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+/* Carry the ends of drawn lines past the places where they meet OTHER
+ * drawn lines.
+ *
+ * `splitAtCorners` fills the corner where one line turns, but a letter is
+ * not one line: a B is a stem with two bowls hung off it, an H is three
+ * separate strokes. Where two of them meet, each band stops dead at the
+ * junction and the corner square outside it is left bare — the same notch,
+ * between strokes this time, where nothing inside a single path can see
+ * it. Half a width of overhang on each, and they overlap.
+ *
+ * Only ends that actually land on another line are moved. The free end of
+ * the E's middle bar, or the foot of an R, has nothing to meet and must
+ * stay exactly where it was drawn. */
+function joinLineEnds(lines, minWidthMm) {
+  var paths = lines.map(function (ln) { return ln.pts; });
+
+  return lines.map(function (ln, i) {
+    var w = ln.widthMm || 0;
+    if (w < (minWidthMm || 0) || ln.closed || ln.pts.length < 2) return ln.pts;
+    var tol = w / 2 + 0.25, out = ln.pts.map(function (p) { return p.slice(); });
+
+    function meetsOther(p) {
+      for (var j = 0; j < paths.length; j++) {
+        if (j === i) continue;
+        if (distToPath(p, paths[j]) <= tol) return true;
+      }
+      return false;
+    }
+    function carry(from, to, atStart) {
+      var dx = to[0] - from[0], dy = to[1] - from[1], L = Math.hypot(dx, dy);
+      if (L < 1e-12) return;
+      var q = [to[0] + dx / L * (w / 2), to[1] + dy / L * (w / 2)];
+      if (atStart) out.unshift(q); else out.push(q);
+    }
+
+    if (meetsOther(ln.pts[0])) carry(ln.pts[1], ln.pts[0], true);
+    var n = ln.pts.length;
+    if (meetsOther(ln.pts[n - 1])) carry(ln.pts[n - 2], ln.pts[n - 1], false);
+    return out;
+  });
+}
+
+/* Split a path at its sharp corners.
+ *
+ * A band bent round a corner in one piece has to fan its stitches through
+ * the turn, and the corner itself ends up crossed by a few long diagonal
+ * stitches — thin, and it reads as a notch bitten out of the letter. Real
+ * lettering sews the two arms as SEPARATE bands, each running a little way
+ * past the corner so they overlap and fill it solid. `head`/`tail` say
+ * which end of each piece came from a corner and so needs that overhang. */
+function splitAtCorners(pts, closed, cornerDeg) {
+  var n = pts.length, cosLim = Math.cos((cornerDeg || 30) * Math.PI / 180), i;
+
+  function dir(a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    return L < 1e-12 ? null : [dx / L, dy / L];
+  }
+
+  var sharp = [];
+  for (i = closed ? 0 : 1; i < (closed ? n : n - 1); i++) {
+    var into = dir(pts[(i - 1 + n) % n], pts[i]), away = dir(pts[i], pts[(i + 1) % n]);
+    if (into && away && into[0] * away[0] + into[1] * away[1] < cosLim) sharp.push(i);
+  }
+  if (!sharp.length) return [{ pts: pts, closed: closed, head: false, tail: false }];
+
+  var out = [], k;
+  if (closed) {
+    for (k = 0; k < sharp.length; k++) {
+      var a = sharp[k], b = sharp[(k + 1) % sharp.length], piece = [], j = a;
+      for (;;) { piece.push(pts[j]); if (j === b) break; j = (j + 1) % n; }
+      if (piece.length > 1) out.push({ pts: piece, closed: false, head: true, tail: true });
+    }
+  } else {
+    var start = 0;
+    for (k = 0; k < sharp.length; k++) {
+      out.push({ pts: pts.slice(start, sharp[k] + 1), closed: false,
+                 head: start > 0, tail: true });
+      start = sharp[k];
+    }
+    out.push({ pts: pts.slice(start), closed: false, head: true, tail: false });
+  }
+  return out.filter(function (p) { return p.pts.length > 1; });
+}
+
+/* Carry a piece past the corner it was cut at, by half the band's width,
+ * so the two pieces meeting there overlap and cover the corner square. */
+function overhang(pts, head, tail, by) {
+  var out = pts.map(function (p) { return p.slice(); });
+  function push(from, to, atStart) {
+    var dx = to[0] - from[0], dy = to[1] - from[1], L = Math.hypot(dx, dy);
+    if (L < 1e-12) return;
+    var p = [to[0] + dx / L * by, to[1] + dy / L * by];
+    if (atStart) out.unshift(p); else out.push(p);
+  }
+  if (head) push(out[1], out[0], true);
+  if (tail) push(out[out.length - 2], out[out.length - 1], false);
+  return out;
+}
+
+/* Sample the centre of a band more finely where it curves.
+ *
+ * Spacing points evenly along the CENTRE does not space them evenly along
+ * the EDGES. Round the outside of a bend the edge has further to travel,
+ * so its needle holes spread out; the tighter the bend, the worse it gets.
+ * On the Smoky Mountain bears that put the outer edge of the small bears'
+ * outlines 0.83 mm apart where 0.40 mm was asked for, and it showed as
+ * gapping — while the larger bear, whose curves are gentler, was fine.
+ *
+ * So: build the edges, look at how far each one actually advanced, and
+ * split any step that came out too long. A few passes settle it. */
+function densifyForBand(s, closed, half, step, limit) {
+  for (var pass = 0; pass < 4; pass++) {
+    var e = offsetEdges(s, closed, half, limit);
+    var n = s.length, lim = closed ? n : n - 1, out = [], busy = false;
+    for (var i = 0; i < lim; i++) {
+      out.push(s[i]);
+      var j = (i + 1) % n;
+      /* a corner is sampled twice; that repeat is not a step to split */
+      if (Math.hypot(s[j][0] - s[i][0], s[j][1] - s[i][1]) < 1e-9) continue;
+      var reach = Math.max(Math.hypot(e.a[j][0] - e.a[i][0], e.a[j][1] - e.a[i][1]),
+                           Math.hypot(e.b[j][0] - e.b[i][0], e.b[j][1] - e.b[i][1]));
+      if (reach <= step * 1.05) continue;
+      var k = Math.min(5, Math.ceil(reach / step));
+      for (var t = 1; t < k; t++) {
+        out.push([s[i][0] + (s[j][0] - s[i][0]) * t / k,
+                  s[i][1] + (s[j][1] - s[i][1]) * t / k]);
+      }
+      busy = true;
+    }
+    if (!closed) out.push(s[n - 1]);
+    s = out;
+    if (!busy) break;
+  }
+  return s;
+}
+
+/* Satin along a drawn line of known width. Returns the band — as a LIST of
+ * runs, because a line with sharp corners is sewn as one band per straight
+ * stretch — plus the underlay that goes beneath it, or null if the line is
+ * too short to make a band at all. */
+function satinAlongPath(pts, closed, widthMm, opt) {
+  var step  = satinStep(opt),
+      total = pathLength(pts, closed);
+  if (total < step * 3 || widthMm <= 0) return null;
+
+  var pieces = splitAtCorners(pts, closed, opt.cornerSplitDeg || 30);
+  var bands = [], under = [];
+
+  pieces.forEach(function (piece) {
+    var line = overhang(piece.pts, piece.head, piece.tail, widthMm / 2);
+    var s = resampleAlong(line, piece.closed, step);
+    if (s.length < 3) return;
+    s = densifyForBand(s, piece.closed, widthMm / 2, step, opt.miterLimit);
+    if (piece.closed && s.length % 2) s.push([(s[s.length - 1][0] + s[0][0]) / 2,
+                                             (s[s.length - 1][1] + s[0][1]) / 2]);
+    var e = offsetEdges(s, piece.closed, widthMm / 2, opt.miterLimit);
+    bands.push(zigzag(e.a, e.b, piece.closed));
+
+    if (opt.satinUnderlay !== false) {
+      /* a run down the middle stops the band sinking into the fabric */
+      under.push(runningStitchPath(s, piece.closed, Math.min(2.0, Math.max(1.0, widthMm))));
+      if (widthMm > 3) {
+        /* on a wide band, a loose zigzag inside the edges holds it flat */
+        var inner = offsetEdges(s, piece.closed, widthMm * 0.3, opt.miterLimit);
+        var every = Math.max(2, Math.round(1.5 / step)), zA = [], zB = [];
+        for (var i = 0; i < s.length; i += every) { zA.push(inner.a[i]); zB.push(inner.b[i]); }
+        if (zA.length > 2) under.push(zigzag(zA, zB, false));
+      }
+    }
+  });
+
+  if (!bands.length) return null;
+  return { satin: bands, underlay: under, widthMm: widthMm };
+}
+
+/* Turn a thick drawn line into a filled outline. Used when a stroke is
+ * wider than satin can sensibly span, so it gets filled instead of being
+ * sewn as a single thread down the middle. */
+function strokeRegion(pts, closed, widthMm) {
+  var total = pathLength(pts, closed);
+  if (total <= 0 || widthMm <= 0) return null;
+  var count = Math.max(8, Math.min(2000, Math.round(total / 0.5)));
+  var s = resamplePath(pts, closed, closed ? count : count + 1);
+  if (s.length < 3) return null;
+  var e = offsetEdges(s, closed, widthMm / 2);
+  if (!closed) {
+    var ring = e.a.concat(e.b.slice().reverse());
+    if (ring.length < 3) return null;
+    return describeRegion(ring, []);
+  }
+  var aA = Math.abs(signedArea(e.a)), aB = Math.abs(signedArea(e.b));
+  var outer = aA >= aB ? e.a : e.b, hole = aA >= aB ? e.b : e.a;
+  return describeRegion(outer, [hole]);
+}
+
+/* The direction a shape is longest in. Used to guess where a ribbon's two
+ * ends are: the points furthest apart along that direction. */
+function principalAxis(ring) {
+  var n = ring.length, cx = 0, cy = 0, i;
+  for (i = 0; i < n; i++) { cx += ring[i][0]; cy += ring[i][1]; }
+  cx /= n; cy /= n;
+  var mxx = 0, mxy = 0, myy = 0;
+  for (i = 0; i < n; i++) {
+    var dx = ring[i][0] - cx, dy = ring[i][1] - cy;
+    mxx += dx * dx; mxy += dx * dy; myy += dy * dy;
+  }
+  var th = 0.5 * Math.atan2(2 * mxy, mxx - myy);
+  return [Math.cos(th), Math.sin(th)];
+}
+
+/* Split a ribbon-shaped outline into its two long edges, by cutting it at
+ * the two points furthest apart along its long direction. Returns the two
+ * edges walking the same way down the shape, or null if there is not
+ * enough of either to work with. */
+function ribbonChains(ring) {
+  var ax = principalAxis(ring), n = ring.length;
+  var lo = 0, hi = 0, loV = Infinity, hiV = -Infinity;
+  for (var i = 0; i < n; i++) {
+    var v = ring[i][0] * ax[0] + ring[i][1] * ax[1];
+    if (v < loV) { loV = v; lo = i; }
+    if (v > hiV) { hiV = v; hi = i; }
+  }
+  if (lo === hi) return null;
+  function walk(from, to) {
+    var out = [], i = from;
+    for (;;) { out.push(ring[i]); if (i === to) break; i = (i + 1) % n; if (out.length > n) return null; }
+    return out;
+  }
+  var one = walk(lo, hi), two = walk(hi, lo);
+  if (!one || !two || one.length < 2 || two.length < 2) return null;
+  /* both edges must run the same way down the shape, so pairing them up
+   * point by point crosses the ribbon rather than running round it */
+  return { a: one, b: two.slice().reverse() };
+}
+
+/* Pair two edges up point by point, evenly spaced along the longer one so
+ * the outside of a curve never goes sparse. */
+function pairEdges(a, b, step) {
+  var la = pathLength(a, false), lb = pathLength(b, false);
+  var count = Math.max(4, Math.round(Math.max(la, lb) / step)) + 1;
+  if (count > 4000) count = 4000;
+  var A = resamplePath(a, false, count), B = resamplePath(b, false, count);
+  if (A.length !== B.length || A.length < 3) return null;
+  return { a: A, b: B };
+}
+
+/* Would sewing this pairing as a satin band actually work? Every crossing
+ * has to be a sane width, the widths have to stay reasonably even, and
+ * every crossing has to stay inside the shape — otherwise the thread
+ * would cut a straight line across a hole or across open fabric. */
+function pairingOK(A, B, region, opt) {
+  var ws = [], i;
+  for (i = 0; i < A.length; i++) ws.push(Math.hypot(A[i][0] - B[i][0], A[i][1] - B[i][1]));
+  var sorted = ws.slice().sort(function (x, y) { return x - y; });
+  var median = sorted[Math.floor(sorted.length / 2)], max = sorted[sorted.length - 1];
+  if (!(median > 0)) return false;
+  if (median < (opt.satinMinWidthMm || 0.7)) return false;
+  if (max > (opt.satinMaxWidthMm || 7)) return false;
+  if (max > median * 2.5) return false;
+
+  /* A band has to be long as well as narrow. Without this a small round
+   * shape passes every other test — it is narrow, and evenly so — and
+   * gets sewn as a band while the larger version of the same shape next
+   * to it is filled. Sitting side by side, the two look nothing alike. */
+  if (pathLength(A, false) < median * (opt.satinMinRatio || 2.5)) return false;
+
+  /* Every crossing has to stay inside the shape, or the thread would cut
+   * straight across a hole or over bare fabric. The very ends are skipped:
+   * a ribbon's two tips are where its edges meet, so a midpoint there sits
+   * exactly ON the outline and "inside or out" is a coin toss. */
+  var rings = [region.outer].concat(region.holes);
+  var lo = Math.floor((A.length - 1) * 0.05), hi = Math.ceil((A.length - 1) * 0.95);
+  var checks = Math.min(hi - lo + 1, 24);
+  if (checks < 2) return false;
+  for (var t = 0; t < checks; t++) {
+    var k = lo + Math.round(t * (hi - lo) / (checks - 1));
+    if (!insideRings((A[k][0] + B[k][0]) / 2, (A[k][1] + B[k][1]) / 2, rings)) return false;
+  }
+  return true;
+}
+
+/* Sew a narrow filled shape as a satin band instead of filling it.
+ * Returns null — meaning "use the ordinary fill" — for anything that is
+ * not a clean ribbon, which is the safe answer. */
+function satinRegion(region, opt) {
+  var step = satinStep(opt), pair = null;
+
+  if (!region.holes.length) {
+    var ch = ribbonChains(region.outer);
+    if (ch) pair = pairEdges(ch.a, ch.b, step);
+  } else if (region.holes.length === 1) {
+    /* A closed band — the O in a word, a ring, a circle drawn as an
+     * outline. Pair the outside against the inside all the way round.
+     *
+     * Each outer point takes the NEAREST point on the hole, not the one
+     * the same fraction of the way round. On a letter whose counter is
+     * much smaller than its outline — an a, an e — walking both rings in
+     * step drifts further and further out of line, and the thread ends up
+     * crossing the letter diagonally instead of straight across it. */
+    var la = pathLength(region.outer, true), lb = pathLength(region.holes[0], true);
+    var na = Math.max(8, Math.min(4000, Math.round(la / step)));
+    var nb = Math.max(8, Math.min(1024, Math.round(lb / step)));
+    var A = resamplePath(region.outer, true, na),
+        H = resamplePath(region.holes[0], true, nb);
+    if (A.length === na && H.length === nb) {
+      var B = [], i, j;
+      for (i = 0; i < na; i++) {
+        var best = Infinity, at = 0;
+        for (j = 0; j < nb; j++) {
+          var dx = H[j][0] - A[i][0], dy = H[j][1] - A[i][1], d = dx * dx + dy * dy;
+          if (d < best) { best = d; at = j; }
+        }
+        B.push(H[at]);
+      }
+      A = A.concat([A[0]]); B = B.concat([B[0]]);   /* come back round to the start */
+      pair = { a: A, b: B };
+    }
+  }
+  if (!pair || !pairingOK(pair.a, pair.b, region, opt)) return null;
+
+  var band = zigzag(pair.a, pair.b, false);
+  var under = [];
+  if (opt.satinUnderlay !== false) {
+    var mid = [];
+    for (var k = 0; k < pair.a.length; k++) {
+      mid.push([(pair.a[k][0] + pair.b[k][0]) / 2, (pair.a[k][1] + pair.b[k][1]) / 2]);
+    }
+    if (mid.length > 2) under.push(runningStitchPath(mid, false, 2.0));
+  }
+  return { satin: [band], underlay: under };
 }
 
 /* ------------------------ whole-image planning --------------------- */
@@ -917,15 +1632,29 @@ var DEFAULTS = {
   colours:       6,
   spacingMm:     0.40,  /* distance between fill rows */
   maxStitchMm:   4.0,
+  jumpWalkMm:    3.0,   /* hops shorter than this are sewn, not jumped */
   minStitchMm:   0.5,
   angleDeg:      0,     /* fill angle of the first colour */
   angleStepDeg:  20,    /* each further colour turns by this much */
   underlay:      true,
   underlaySpacingMm: 2.5,
   outline:       true,
-  lineStepMm:    2.0,   /* stitch length along a drawn line */
-  boldLines:     false, /* sew each drawn line three times over */
+  lineStepMm:    2.0,   /* longest stitch along a drawn line */
+  lineMinStepMm: 0.9,   /* shortest — used where the line bends hardest */
+  lineSagMm:     0.1,   /* how far a stitch may cut across a curve */
+  linePasses:    1,     /* 1 plain, 3 bold, 5 about what a bought font uses */
+  lockStitches:  true,  /* anchor the thread wherever it starts or is cut */
+  lockStitchMm:  0.7,
   outlineStepMm: 1.8,
+  satin:         true,  /* sew narrow shapes and thick lines as smooth bands */
+  satinSpacingMm: 0.40,  /* how far the band advances per stitch */
+  satinMinWidthMm: 0.7,  /* narrower than this and even satin cannot hold it */
+  satinMinRatio:  2.5,   /* a band must be this many times longer than wide */
+  satinMaxWidthMm: 7.0,  /* wider than this a single stitch would snag */
+  satinMinLineMm: 1.0,   /* a drawn line at least this thick becomes a band */
+  satinUnderlay: true,
+  miterLimit:    2.0,   /* how far a band may bend round a gentle corner */
+  cornerSplitDeg: 30,   /* a sharper turn than this is sewn as two bands */
   overlapMm:     0.3,   /* how far colours grow into each other */
   insetMm:       0.15,
   cleanupPx:     1,
@@ -933,6 +1662,39 @@ var DEFAULTS = {
   simplifyPx:    0.75,
   trims:         true
 };
+
+/* What actually happened to each shape, said in plain English. This runs
+ * AFTER the stitches exist, because whether a narrow shape is a problem
+ * now depends on whether satin managed to sew it as a clean band. */
+function qualityNotes(blocks, notes, opt) {
+  var THIN_MM = opt.thinWarnMm || 1.2, bands = 0, filledLines = 0;
+  blocks.forEach(function (bk) {
+    var regions = bk.regions || [];
+    var thin = regions.filter(function (r) { return !r.satin && r.avgWidthMm < THIN_MM; }).length;
+    bands += regions.filter(function (r) { return r.satin; }).length;
+    (bk.lines || []).forEach(function (ln) {
+      if (ln.mode === 'satin') bands++;
+      if (ln.mode === 'fill') filledLines++;
+    });
+    if (thin) {
+      notes.push({ kind: 'thin', rgb: bk.rgb, count: thin,
+        text: thin + ' shape(s) of this colour are thinner than ' + THIN_MM.toFixed(1) +
+              ' mm and are not a simple band, so they cannot be sewn cleanly. Thread ' +
+              'cannot hold detail that fine — make the design bigger or simplify it.' });
+    }
+  });
+  if (bands) {
+    notes.push({ kind: 'satin', count: bands,
+      text: bands + ' narrow shape(s) and thick line(s) are sewn as smooth satin bands ' +
+            'instead of being filled. That is what makes lettering and outlines look crisp.' });
+  }
+  if (filledLines) {
+    notes.push({ kind: 'thickline', count: filledLines,
+      text: filledLines + ' line(s) are too thick for one smooth band, so they are filled ' +
+            'like a shape instead. That is the right answer, but it uses more stitches.' });
+  }
+  return notes;
+}
 
 function planDesign(img, userOpt) {
   var opt = Object.assign({}, DEFAULTS, userOpt || {});
@@ -965,7 +1727,6 @@ function planDesign(img, userOpt) {
   var minAreaPx = Math.max(4, Math.round(opt.minAreaMm2 / (mmPerPx * mmPerPx)));
 
   var blocks = [], notes = [];
-  var THIN_MM = opt.thinWarnMm || 1.2;
   for (var lab = 0; lab < q.palette.length; lab++) {
     if (isBg[lab] || !q.counts[lab]) continue;
     if (opt.skip && opt.skip.indexOf(lab) >= 0) continue;
@@ -988,13 +1749,6 @@ function planDesign(img, userOpt) {
       notes.push({ kind: 'specks', rgb: q.palette[lab], count: traced.length - regions.length,
         text: (traced.length - regions.length) + ' tiny spot(s) of this colour were too small to stitch and were left out.' });
     }
-    var thin = regions.filter(function (r) { return r.avgWidthMm < THIN_MM; }).length;
-    if (thin) {
-      notes.push({ kind: 'thin', rgb: q.palette[lab], count: thin,
-        text: thin + ' shape(s) of this colour are thinner than ' + THIN_MM.toFixed(1) +
-              ' mm. Thread cannot hold detail that fine — make the design bigger or simplify it.' });
-    }
-
     blocks.push({
       label:   lab,
       rgb:     q.palette[lab],
@@ -1013,46 +1767,118 @@ function planDesign(img, userOpt) {
   }
 
   generateRuns(blocks, opt);
+  qualityNotes(blocks, notes, opt);
 
   return { blocks: blocks.filter(function (b) { return b.runs.length; }),
            notes: notes, quantised: q, backgroundLabel: bg, backgroundLabels: bgList,
            mmPerPx: mmPerPx, opt: opt };
 }
 
-/* Underlay, then the fill, then an optional outline — for every region of
- * every colour. Shared by the bitmap and the SVG routes. */
+/* Underlay, then the band or the fill, then an optional outline — for
+ * every region of every colour. Shared by the bitmap and the SVG routes.
+ *
+ * Every run carries a `tier`, and the machine works through the tiers in
+ * order. That is what guarantees a shape's underlay goes down BEFORE the
+ * stitching that sits on top of it: without it, the shortest-hop ordering
+ * could leave the underlay until last and its widely spaced lines would
+ * end up lying visibly across the finished shape. */
 function generateRuns(blocks, opt) {
   blocks.forEach(function (bk, bi) {
     var angle = opt.angleDeg + bi * opt.angleStepDeg;
     bk.angleDeg = angle;
     bk.runs = [];
-    bk.regions.forEach(function (reg) {
+    var tier = 0;
+
+    function add(run, t, isSatin, region) {
+      if (!run || run.length < 2) return;
+      run.tier = t;
+      if (isSatin) run.satin = true;
+      /* Which filled shape this run is part of, if any. Only stitching
+       * that will be BURIED under more stitching of the same shape may be
+       * joined to its neighbour instead of jumped to. */
+      if (region) run.region = region;
+      bk.runs.push(run);
+    }
+
+    function fillInto(reg, base) {
       if (opt.underlay) {
-        fillRegion(reg, {
-          angleDeg: angle + 90, spacingMm: opt.underlaySpacingMm,
-          maxStitchMm: 3.0, insetMm: Math.max(opt.insetMm, 0.6)
-        }).forEach(function (r) { bk.runs.push(r); });
+        fillRegion(reg, { angleDeg: angle + 90, spacingMm: opt.underlaySpacingMm,
+                          maxStitchMm: 3.0, insetMm: Math.max(opt.insetMm, 0.6) })
+          .forEach(function (r) { add(r, base, false, reg); });
       }
-      fillRegion(reg, {
-        angleDeg: angle, spacingMm: opt.spacingMm,
-        maxStitchMm: opt.maxStitchMm, insetMm: opt.insetMm
-      }).forEach(function (r) { bk.runs.push(r); });
+      fillRegion(reg, { angleDeg: angle, spacingMm: opt.spacingMm,
+                        maxStitchMm: opt.maxStitchMm, insetMm: opt.insetMm })
+        .forEach(function (r) { add(r, base + 1, false, reg); });
+    }
+
+    bk.regions.forEach(function (reg) {
+      var base = tier; tier += 3;
+      var band = null;
+      /* 2 x area / perimeter is close to a shape's width, so it is a cheap
+       * way to ask "could this be a band?" before doing the real work of
+       * finding its two long edges */
+      if (opt.satin && reg.avgWidthMm > 0 && reg.avgWidthMm <= opt.satinMaxWidthMm) {
+        band = satinRegion(reg, opt);
+      }
+      reg.satin = !!band;
+
+      if (band) {
+        band.underlay.forEach(function (r) { add(r, base); });
+        band.satin.forEach(function (r) { add(r, base + 1, true); });
+        return;            /* a band covers itself: no fill, no outline */
+      }
+      fillInto(reg, base);
       if (opt.outline) {
-        bk.runs.push(runningStitch(reg.outer, opt.outlineStepMm));
-        reg.holes.forEach(function (hl) { bk.runs.push(runningStitch(hl, opt.outlineStepMm)); });
+        add(runningStitch(reg.outer, opt.outlineStepMm), base + 2);
+        reg.holes.forEach(function (hl) { add(runningStitch(hl, opt.outlineStepMm), base + 2); });
       }
     });
 
-    /* drawn lines from an SVG's strokes — outline artwork lives here */
-    (bk.lines || []).forEach(function (ln) {
-      var run = runningStitchPath(ln.pts, ln.closed, opt.lineStepMm);
-      if (run.length > 1) bk.runs.push(opt.boldLines ? boldenLine(run) : run);
+    /* Drawn lines from an SVG's strokes — outline artwork lives here.
+     * Ends that meet another line are carried past the junction first, so
+     * the corner where two strokes of a letter meet fills in solid. */
+    var joined = opt.satin ? joinLineEnds(bk.lines || [], opt.satinMinLineMm) : null;
+    (bk.lines || []).forEach(function (ln, li) {
+      var base = tier; tier += 3;
+      var w = ln.widthMm || 0;
+
+      if (opt.satin && w >= opt.satinMinLineMm && w <= opt.satinMaxWidthMm) {
+        var band = satinAlongPath(joined ? joined[li] : ln.pts, ln.closed, w, opt);
+        if (band) {
+          ln.mode = 'satin';
+          band.underlay.forEach(function (r) { add(r, base); });
+          band.satin.forEach(function (r) { add(r, base + 1, true); });
+          return;
+        }
+      }
+      if (opt.satin && w > opt.satinMaxWidthMm) {
+        /* too wide for one stitch to span it, so sew it as the shape it
+         * really is rather than as a single thread down the middle */
+        var reg = strokeRegion(ln.pts, ln.closed, w);
+        if (reg && reg.areaMm2 > opt.minAreaMm2) {
+          ln.mode = 'fill';
+          fillInto(reg, base);
+          return;
+        }
+      }
+      var passes = Math.max(1, opt.linePasses || 1);
+      ln.mode = passes > 1 ? 'bean' : 'run';
+      var run = adaptiveLinePath(ln.pts, ln.closed, opt);
+      if (run.length > 1) add(passes > 1 ? beanStitch(run, passes) : run, base + 1);
     });
 
-    bk.runs = bk.runs
-      .map(function (r) { return dropTinyStitches(r, opt.minStitchMm); })
-      .map(function (r) { return enforceMaxStitch(r, opt.maxStitchMm); })
-      .filter(function (r) { return r.length > 1; });
+    bk.runs = bk.runs.map(function (r) {
+      var t = r.tier, sat = r.satin;
+      /* A satin stitch IS the width of the band, so it must not be thinned
+       * out as though it were a stray short fill stitch, and splitting one
+       * would punch a needle hole through the middle of the band. */
+      var o = sat
+        ? enforceMaxStitch(dropTinyStitches(r, MIN_STITCH_FLOOR_MM),
+                           Math.min(12.0, Math.max(opt.maxStitchMm, (opt.satinMaxWidthMm || 7) + 1)))
+        : enforceMaxStitch(dropTinyStitches(r, opt.minStitchMm), opt.maxStitchMm);
+      o.tier = t; o.satin = sat; o.region = r.region;
+      return o;
+    }).filter(function (r) { return r.length > 1; });
   });
   return blocks;
 }
@@ -1104,7 +1930,7 @@ function planShapes(input, userOpt) {
   var shapes  = Array.isArray(input) ? input : (input && input.shapes  ? input.shapes  : []);
   var strokes = Array.isArray(input) ? (opt.strokes || [])
                                      : (input && input.strokes ? input.strokes : []);
-  var notes = [], THIN_MM = opt.thinWarnMm || 1.2;
+  var notes = [];
   var skip = opt.skipColours || guessVectorBackground(shapes);
 
   /* Scale so the STITCHED artwork ends up the requested finished width.
@@ -1113,31 +1939,48 @@ function planShapes(input, userOpt) {
   var measured = shapes.filter(function (s) { return skip.indexOf(rgbKey(s.rgb)) < 0; });
   if (!measured.length) measured = shapes;
   var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  function span(pts) {
+  /* `pad` is half a stroke's width: a drawn line reaches that far either
+   * side of the path it is drawn along, and once thick lines are sewn as
+   * satin bands that is real stitching, not a rounding error. Measure it
+   * or a design comes out wider than the size asked for. */
+  function span(pts, pad) {
+    pad = pad || 0;
     pts.forEach(function (p) {
-      if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
-      if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+      if (p[0] - pad < x0) x0 = p[0] - pad; if (p[0] + pad > x1) x1 = p[0] + pad;
+      if (p[1] - pad < y0) y0 = p[1] - pad; if (p[1] + pad > y1) y1 = p[1] + pad;
     });
   }
-  measured.forEach(function (s) { s.rings.forEach(span); });
-  strokes.forEach(function (s) { if (skip.indexOf(rgbKey(s.rgb)) < 0) span(s.pts); });
+  measured.forEach(function (s) { s.rings.forEach(function (r) { span(r); }); });
+  strokes.forEach(function (s) {
+    if (skip.indexOf(rgbKey(s.rgb)) < 0) span(s.pts, (s.widthUnits || 0) / 2);
+  });
   if (!isFinite(x0)) return { blocks: [], notes: [{ kind: 'empty', text: 'Nothing in that drawing could be stitched.' }], opt: opt };
   var scale = opt.widthMm / Math.max(x1 - x0, 1e-6);
   function toMm(p) { return [(p[0] - x0) * scale, (p[1] - y0) * scale]; }
 
   /* one block per distinct fill colour, kept in drawing order so that
    * anything painted on top is also stitched on top */
-  var byColour = {}, order = [], badShapes = 0;
-  function block(rgb) {
+  /* One block per distinct fill colour. `seenAt` records where in the
+   * drawing that colour FIRST appeared, so the colours are sewn in the
+   * order they were drawn — anything painted on top is stitched on top.
+   * Fills and strokes arrive in separate lists, so without this a stroked
+   * outline could never be sewn under a filled shape however the drawing
+   * was put together. */
+  var byColour = {}, order = [], seenAt = {}, badShapes = 0;
+  function block(rgb, at) {
     var key = rgbKey(rgb);
-    if (!byColour[key]) { byColour[key] = { rgb: rgb, regions: [], lines: [], areaMm2: 0 }; order.push(key); }
+    if (!byColour[key]) {
+      byColour[key] = { rgb: rgb, regions: [], lines: [], areaMm2: 0 };
+      order.push(key);
+      seenAt[key] = (at === undefined) ? order.length : at;
+    }
     return byColour[key];
   }
 
   shapes.forEach(function (s) {
     if (skip.indexOf(rgbKey(s.rgb)) >= 0) return;
     var key = rgbKey(s.rgb);
-    block(s.rgb);
+    block(s.rgb, s.order);
     /* group rings shape by shape: two separate dots inside a ring are not
      * holes in it, but a letter's counter is */
     var grouped = groupRings(s.rings);
@@ -1166,28 +2009,24 @@ function planShapes(input, userOpt) {
   var wideLines = 0;
   strokes.forEach(function (s) {
     if (skip.indexOf(rgbKey(s.rgb)) >= 0) return;
-    var b = block(s.rgb);
+    var b = block(s.rgb, s.order);
     var widthMm = (s.widthUnits || 1) * scale;
     if (widthMm > 2) wideLines++;
     b.lines.push({ pts: s.pts.map(toMm), closed: s.closed, widthMm: widthMm });
   });
-  if (wideLines) {
+  if (wideLines && !opt.satin) {
     notes.push({ kind: 'wideline', count: wideLines,
-      text: wideLines + ' line(s) are drawn thicker than 2 mm. They are sewn as a single ' +
-            'line of stitching, so they will come out finer than they look on screen. ' +
-            'Tick "bold lines" to sew them three times over.' });
+      text: wideLines + ' line(s) are drawn thicker than 2 mm. Smooth bands are switched ' +
+            'off, so they are sewn as a single line of stitching and will come out much ' +
+            'finer than they look on screen. Turn smooth bands back on, or set the line ' +
+            'weight to bold so each line is sewn several times over.' });
   }
 
   var blocks = [];
+  order.sort(function (a, b) { return seenAt[a] - seenAt[b]; });
   order.forEach(function (key) {
     var b = byColour[key];
     if (!b.regions.length && !b.lines.length) return;
-    var thin = b.regions.filter(function (r) { return r.avgWidthMm < THIN_MM; }).length;
-    if (thin) {
-      notes.push({ kind: 'thin', rgb: b.rgb, count: thin,
-        text: thin + ' shape(s) of this colour are thinner than ' + THIN_MM.toFixed(1) +
-              ' mm. Thread cannot hold detail that fine — make the design bigger or simplify it.' });
-    }
     blocks.push({
       label: key, rgb: b.rgb, regions: b.regions, lines: b.lines, areaMm2: b.areaMm2,
       thread: (opt.threadOverride && opt.threadOverride[key]) || nearestThread(b.rgb)
@@ -1195,6 +2034,7 @@ function planShapes(input, userOpt) {
   });
 
   generateRuns(blocks, opt);
+  qualityNotes(blocks, notes, opt);
   return { blocks: blocks.filter(function (b) { return b.runs.length; }),
            notes: notes, vector: true, mmPerUnit: scale, skipColours: skip, opt: opt };
 }
@@ -1206,36 +2046,102 @@ function rgbKey(rgb) { return rgb[0] + ',' + rgb[1] + ',' + rgb[2]; }
 function buildStitches(plan) {
   var out = [], threads = [], cur = [0, 0], first = true, started = false;
 
+  /* the longest hop between two runs that is worth sewing rather than
+   * jumping — never longer than a legal stitch */
+  var walk = Math.min(plan.opt.jumpWalkMm === undefined ? 3.0 : plan.opt.jumpWalkMm,
+                      plan.opt.maxStitchMm || 4.0);
+  var lockMm = plan.opt.lockStitches === false ? 0
+             : (plan.opt.lockStitchMm === undefined ? 0.7 : plan.opt.lockStitchMm);
+
   plan.blocks.forEach(function (bk) {
     threads.push(bk.thread);
     if (!first) out.push({ x: cur[0], y: cur[1], cmd: 'color' });
     first = false;
 
-    var pool = bk.runs.slice();
+    /* Decide the whole order FIRST. Anchoring the thread depends on what
+     * happens next — a run the machine is about to jump away from has to
+     * be tied off, one it merely walks on from does not — and that cannot
+     * be known while the order is still being chosen. */
+    var pool = bk.runs.slice(), order = [], at = cur;
     while (pool.length) {
-      var bi = 0, bd = Infinity, rev = false;
-      for (var i = 0; i < pool.length; i++) {
+      /* Work through the tiers in order — underlay before the stitching
+       * that covers it — and inside a tier take whichever run starts
+       * nearest, so the needle takes the shortest hop it can. */
+      var tier = Infinity, i;
+      for (i = 0; i < pool.length; i++) {
+        var t = pool[i].tier || 0;
+        if (t < tier) tier = t;
+      }
+      var bi = -1, bd = Infinity, rev = false;
+      for (i = 0; i < pool.length; i++) {
+        if ((pool[i].tier || 0) !== tier) continue;
         var a = pool[i][0], b = pool[i][pool[i].length - 1];
-        var da = Math.hypot(a[0] - cur[0], a[1] - cur[1]);
-        var db = Math.hypot(b[0] - cur[0], b[1] - cur[1]);
+        var da = Math.hypot(a[0] - at[0], a[1] - at[1]);
+        var db = Math.hypot(b[0] - at[0], b[1] - at[1]);
         if (da < bd) { bd = da; bi = i; rev = false; }
         if (db < bd) { bd = db; bi = i; rev = true; }
       }
       var run = pool.splice(bi, 1)[0];
       if (rev) run = run.slice().reverse();
+      order.push(run);
+      at = run[run.length - 1];
+    }
+
+    var prevRegion = null;
+    order.forEach(function (run, idx) {
+      var bd = Math.hypot(run[0][0] - cur[0], run[0][1] - cur[1]);
 
       /* The needle begins at the centre of the hoop, which is nowhere near
        * the design's own origin, so the very first move MUST be a jump.
        * Without this the machine sews a long line across the fabric from
        * the centre to wherever the design starts. */
-      if (bd > 0.001 || !started) {
-        if (plan.opt.trims && bd > 4) out.push({ x: cur[0], y: cur[1], cmd: 'trim' });
+      /* A short hop may be sewn rather than jumped — a jump that short is
+       * not worth cutting, so the machine would leave the thread floating
+       * loose across it anyway, and one ordinary stitch secures it.
+       *
+       * But ONLY where the stitch will be buried: inside a single filled
+       * shape, under the rest of that shape's own stitching. Between two
+       * separate shapes there is nothing to hide it, and on lettering it
+       * comes out as a line ruled across bare fabric from one letter to
+       * the next. The move also has to stay inside the shape, or it cuts
+       * straight across a hole. */
+      var buried = run.region && run.region === prevRegion &&
+                   insideRings((cur[0] + run[0][0]) / 2, (cur[1] + run[0][1]) / 2,
+                               [run.region.outer].concat(run.region.holes));
+      var jumped = !started || bd > walk || !buried;
+      if (jumped) {
+        if (started && plan.opt.trims && bd > 4) out.push({ x: cur[0], y: cur[1], cmd: 'trim' });
         out.push({ x: run[0][0], y: run[0][1], cmd: 'jump' });
       }
       started = true;
-      for (var s = 0; s < run.length; s++) out.push({ x: run[s][0], y: run[s][1], cmd: 'stitch' });
+
+      /* Two runs can finish and start on all but the same spot. Sewing the
+       * hop between them would be a stitch of a few hundredths of a
+       * millimetre, which is the kind of thing that snaps a needle, so the
+       * repeated point is simply left out. */
+      if (jumped || bd >= MIN_STITCH_FLOOR_MM) {
+        out.push({ x: run[0][0], y: run[0][1], cmd: 'stitch' });
+      }
+      /* the thread arrived here loose, so anchor it before going on */
+      if (jumped) {
+        lockAtStart(run, lockMm).forEach(function (p) {
+          out.push({ x: p[0], y: p[1], cmd: 'stitch' });
+        });
+      }
+      for (var s = 1; s < run.length; s++) out.push({ x: run[s][0], y: run[s][1], cmd: 'stitch' });
       cur = run[run.length - 1];
-    }
+      prevRegion = run.region || null;
+
+      /* tie off if the machine is about to leave this spot, or if this is
+       * the last thing sewn in this colour */
+      var nxt = order[idx + 1];
+      var leaving = !nxt || Math.hypot(nxt[0][0] - cur[0], nxt[0][1] - cur[1]) > walk;
+      if (leaving) {
+        lockAtEnd(run, lockMm).forEach(function (p) {
+          out.push({ x: p[0], y: p[1], cmd: 'stitch' });
+        });
+      }
+    });
   });
 
   out.push({ x: cur[0], y: cur[1], cmd: 'end' });
@@ -1438,12 +2344,21 @@ var API = {
   traceContours: traceContours, simplify: simplify, signedArea: signedArea,
   pointInPoly: pointInPoly, ringLength: ringLength, insideRings: insideRings, maskToRegions: maskToRegions,
   fillRegion: fillRegion, runningStitch: runningStitch, splitRun: splitRun, enforceMaxStitch: enforceMaxStitch,
-  runningStitchPath: runningStitchPath, boldenLine: boldenLine,
+  runningStitchPath: runningStitchPath, boldenLine: boldenLine, dropTinyStitches: dropTinyStitches,
+  adaptiveLinePath: adaptiveLinePath, beanStitch: beanStitch,
+  lockAtStart: lockAtStart, lockAtEnd: lockAtEnd,
+  resamplePath: resamplePath, pathLength: pathLength,
+  resampleAlong: resampleAlong, pathFrame: pathFrame,
+  splitAtCorners: splitAtCorners, overhang: overhang, joinLineEnds: joinLineEnds,
+  densifyForBand: densifyForBand,
+  offsetEdges: offsetEdges, zigzag: zigzag, principalAxis: principalAxis, satinStep: satinStep,
+  ribbonChains: ribbonChains, pairEdges: pairEdges, pairingOK: pairingOK,
+  satinAlongPath: satinAlongPath, satinRegion: satinRegion, strokeRegion: strokeRegion,
   planDesign: planDesign, planShapes: planShapes, guessVectorBackground: guessVectorBackground, generateRuns: generateRuns,
   groupRings: groupRings, describeRegion: describeRegion, rgbKey: rgbKey,
   buildStitches: buildStitches,
   encodeJEF: encodeJEF, decodeJEF: decodeJEF, summarise: summarise,
-  jefHoopCode: jefHoopCode, DEFAULTS: DEFAULTS
+  jefHoopCode: jefHoopCode, DEFAULTS: DEFAULTS, MIN_STITCH_FLOOR_MM: MIN_STITCH_FLOOR_MM
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -1880,6 +2795,10 @@ function importSVG(source, opt) {
   });
 
   var notes = [], shapes = [], strokes = [], warned = {}, strokeOnly = 0;
+  /* Where each thing sat in the drawing. Fills and strokes are collected
+   * into two lists, which loses the order they were drawn in; the stitcher
+   * needs it to decide which colour is sewn on top of which. */
+  var seq = 0;
   function warn(kind, text) { if (!warned[kind]) { warned[kind] = 1; notes.push({ kind: kind, text: text }); } }
 
   var tol = opt.curveTolerance || 0.2;
@@ -1941,7 +2860,8 @@ function importSVG(source, opt) {
         if (rgb) {
           var rings = subs.map(function (s) { return s.pts; })
                           .filter(function (r) { return r.length > 2; });
-          if (rings.length) shapes.push({ rings: rings, rgb: rgb, fillRule: (st['fill-rule'] || 'nonzero').trim() });
+          if (rings.length) shapes.push({ rings: rings, rgb: rgb, order: seq++,
+                                          fillRule: (st['fill-rule'] || 'nonzero').trim() });
         }
 
         /* ---- drawn lines ---- */
@@ -1952,7 +2872,8 @@ function importSVG(source, opt) {
           var swRaw = parseFloat(st['stroke-width']);
           var sw = (isNaN(swRaw) ? 1 : swRaw) * sc;
           subs.forEach(function (s) {
-            if (s.pts.length >= 2) strokes.push({ pts: s.pts, closed: s.closed, rgb: srgb, widthUnits: sw });
+            if (s.pts.length >= 2) strokes.push({ pts: s.pts, closed: s.closed, rgb: srgb,
+                                                  widthUnits: sw, order: seq++ });
           });
           if (!rgb) strokeOnly++;
         }
@@ -2213,8 +3134,10 @@ function options() {
     maxStitchMm: parseFloat($('maxst').value) || 4,
     angleDeg: parseFloat($('ang').value) || 0,
     underlay: $('under').checked,
+    satin: $('satin').checked,
+    satinMaxWidthMm: parseFloat($('satmax').value) || 7,
     outline: $('outl').checked,
-    boldLines: $('bold').checked,
+    linePasses: parseInt($('linew').value, 10) || 1,
     lineStepMm: parseFloat($('linestep').value) || 2,
     trims: $('trim').checked,
     overlapMm: parseFloat($('ovl').value) || 0,
@@ -2250,7 +3173,7 @@ function redo() {
 }
 
 ['w', 'unit', 'k', 'dens', 'maxst', 'ang', 'under', 'outl', 'trim', 'ovl', 'hoop', 'showjump',
-  'bold', 'linestep']
+  'linew', 'linestep', 'satin', 'satmax']
   .forEach(function (id) {
     $(id).addEventListener('input', function () {
       if (mode !== 'vector') $('kv').textContent = $('k').value;
